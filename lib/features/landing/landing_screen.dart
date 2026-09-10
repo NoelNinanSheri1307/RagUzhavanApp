@@ -38,7 +38,7 @@ class LandingScreen extends StatelessWidget {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: Image.asset(
-                          'assets/images/AppLogo.png',
+                          'assets/images/logo.png',
                           height: 32,
                           width: 32,
                           fit: BoxFit.contain,

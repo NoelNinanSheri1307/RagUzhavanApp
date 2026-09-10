@@ -30,40 +30,47 @@ class ScientificTelemetryBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const PulseIndicator(color: AppColors.field, size: 6.0),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.text('sensorTelemetry').toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.leaf,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                  if (sensorData.isDemoData) ...[
+              Expanded(
+                child: Row(
+                  children: [
+                    const PulseIndicator(color: AppColors.field, size: 6.0),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.warningText.withValues(alpha: 0.15),
-                        border: Border.all(color: AppColors.warningText.withValues(alpha: 0.5)),
+                    Flexible(
+                      child: Text(
+                        l10n.text('sensorTelemetry').toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.leaf,
+                          letterSpacing: 0.8,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      child: const Text(
-                        'DEMO DATA',
-                        style: TextStyle(
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.warningText,
-                          fontFamily: 'monospace',
+                    ),
+                    if (sensorData.isDemoData) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.warningText.withValues(alpha: 0.15),
+                          border: Border.all(color: AppColors.warningText.withValues(alpha: 0.5)),
+                        ),
+                        child: const Text(
+                          'DEMO DATA',
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.warningText,
+                            fontFamily: 'monospace',
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
+              const SizedBox(width: 8),
               Text(
                 'ID: ${sensorData.sensorId}',
                 style: const TextStyle(

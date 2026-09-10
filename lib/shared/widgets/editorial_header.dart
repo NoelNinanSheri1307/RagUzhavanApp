@@ -46,7 +46,7 @@ class EditorialHeader extends StatelessWidget implements PreferredSizeWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: Image.asset(
-                  'assets/images/AppLogo.png',
+                  'assets/images/logo.png',
                   height: 26,
                   width: 26,
                   fit: BoxFit.contain,

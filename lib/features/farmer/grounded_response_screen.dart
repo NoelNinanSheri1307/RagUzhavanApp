@@ -403,10 +403,15 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        'RULE PROVENANCE: ${_response!.ruleId}',
-                                        style: const TextStyle(fontSize: 10.0, fontFamily: 'monospace', color: AppColors.straw),
+                                      Expanded(
+                                        child: Text(
+                                          'RULE PROVENANCE: ${_response!.ruleId}',
+                                          style: const TextStyle(fontSize: 10.0, fontFamily: 'monospace', color: AppColors.straw),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
+                                      const SizedBox(width: 8),
                                       Text(
                                         DateFormatter.formatDataAge(_response!.averageDataAgeDays, locale: localeNotifier.languageCode),
                                         style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppColors.leaf),

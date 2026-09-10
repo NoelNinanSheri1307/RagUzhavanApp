@@ -106,15 +106,20 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            l10n.text('askHeader').toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.foregroundSubtle,
-                              letterSpacing: 0.8,
+                          Expanded(
+                            child: Text(
+                              l10n.text('askHeader').toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.foregroundSubtle,
+                                letterSpacing: 0.8,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          const SizedBox(width: 8),
                           InkWell(
                             onTap: _toggleSpeechToText,
                             child: Container(
@@ -159,17 +164,16 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                           style: const TextStyle(fontSize: 11.0, color: AppColors.foregroundMuted),
                         ),
                       ],
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 12),
                       TextField(
                         controller: _queryController,
-                        maxLines: 3,
-                        style: const TextStyle(
-                          fontSize: 14.5,
-                          color: AppColors.foreground,
-                          height: 1.45,
-                        ),
+                        maxLines: 4,
+                        style: const TextStyle(color: AppColors.foreground, fontSize: 14.0),
                         decoration: InputDecoration(
                           hintText: l10n.text('questionPlaceholder'),
+                          hintStyle: const TextStyle(color: AppColors.foregroundSubtle, fontSize: 13.0),
+                          fillColor: AppColors.surfaceHighlight,
+                          filled: true,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -178,15 +182,15 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                       const SizedBox(height: 12),
 
                       Text(
-                        'COLLECTED FIELD CONTEXT (DISTRICT -> BLOCK)',
+                        l10n.text('fieldContextGroup').toUpperCase(),
                         style: const TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.leaf,
+                          color: AppColors.foregroundSubtle,
                           letterSpacing: 0.8,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
 
                       LayoutBuilder(
                         builder: (context, constraints) {
@@ -299,25 +303,34 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.cell_tower, color: AppColors.straw, size: 18),
-                                const SizedBox(width: 10),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l10n.text('lowBandwidthHeader'),
-                                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.paper),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.cell_tower, color: AppColors.straw, size: 18),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l10n.text('lowBandwidthHeader'),
+                                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.paper),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          isTamil ? '2G குறுஞ்செய்தி வழி சுருக்கப்பட்ட தரவு (50 KB Max)' : 'Compress payload for 2G / SMS transmission (50 KB Limit)',
+                                          style: const TextStyle(fontSize: 10.5, color: AppColors.foregroundSubtle),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      isTamil ? '2G குறுஞ்செய்தி வழி சுருக்கப்பட்ட தரவு (50 KB Max)' : 'Compress payload for 2G / SMS transmission (50 KB Limit)',
-                                      style: const TextStyle(fontSize: 10.5, color: AppColors.foregroundSubtle),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             Switch(
                               value: _isLowBandwidthMode,
                               activeThumbColor: AppColors.straw,
@@ -348,7 +361,13 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(l10n.text('askQuestion')),
+                                    Flexible(
+                                      child: Text(
+                                        l10n.text('askQuestion'),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                     const SizedBox(width: 8),
                                     const Icon(Icons.arrow_forward, size: 16),
                                   ],

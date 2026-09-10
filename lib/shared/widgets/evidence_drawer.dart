@@ -173,19 +173,26 @@ class _EvidenceDrawerState extends State<EvidenceDrawer> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  numRec.parameter,
-                                  style: const TextStyle(fontSize: 12.0, fontWeight: FontWeight.w600, color: AppColors.paper),
-                                ),
-                                Text(
-                                  'Rule: ${numRec.ruleId} · ${numRec.sourceTitle}',
-                                  style: const TextStyle(fontSize: 10.0, fontFamily: 'monospace', color: AppColors.foregroundSubtle),
-                                ),
-                              ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    numRec.parameter,
+                                    style: const TextStyle(fontSize: 12.0, fontWeight: FontWeight.w600, color: AppColors.paper),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    'Rule: ${numRec.ruleId} · ${numRec.sourceTitle}',
+                                    style: const TextStyle(fontSize: 10.0, fontFamily: 'monospace', color: AppColors.foregroundSubtle),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
@@ -272,7 +279,8 @@ class _EvidenceDrawerState extends State<EvidenceDrawer> {
           ],
         ),
         const SizedBox(height: 6),
-        Row(
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
               source.authorOrInstitute,
@@ -320,12 +328,16 @@ class _EvidenceDrawerState extends State<EvidenceDrawer> {
                 color: AppColors.foregroundSubtle,
               ),
             ),
-            Text(
-              'TAP FOR FULL DETAILS · ${source.datasetAgeDays}d OLD',
-              style: const TextStyle(
-                fontSize: 10.0,
-                fontFamily: 'monospace',
-                color: AppColors.straw,
+            Flexible(
+              child: Text(
+                'TAP FOR FULL DETAILS · ${source.datasetAgeDays}d OLD',
+                style: const TextStyle(
+                  fontSize: 10.0,
+                  fontFamily: 'monospace',
+                  color: AppColors.straw,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

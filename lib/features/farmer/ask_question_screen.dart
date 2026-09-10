@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/localization/locale_notifier.dart';
+import '../../core/services/speech_to_text_service.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
@@ -19,6 +20,10 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
   final _queryController = TextEditingController(
     text: 'Should I irrigate my paddy field this week in Budalur block?',
   );
+
+  final SpeechToTextService _sttService = AppSpeechToTextService();
+  bool _isListening = false;
+  String? _sttError;
 
   String _district = 'Thanjavur';
   String _block = 'Budalur';
@@ -36,6 +41,39 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
     'Are there recent groundnut advisories for Kadaladi block in Ramanathapuram?',
     'தஞ்சாவூர் பூதலூர் வட்டார நெல் குலை நோய் தடுப்பு மருந்துகள் யாவை?',
   ];
+
+  Future<void> _toggleSpeechToText() async {
+    final localeNotifier = Provider.of<LocaleNotifier>(context, listen: false);
+    final lang = localeNotifier.languageCode;
+
+    if (_isListening) {
+      await _sttService.stopListening();
+      setState(() {
+        _isListening = false;
+      });
+    } else {
+      setState(() {
+        _sttError = null;
+      });
+      await _sttService.startListening(
+        languageCode: lang,
+        onResult: (text) {
+          setState(() {
+            _queryController.text = text;
+          });
+        },
+        onError: (err) {
+          setState(() {
+            _isListening = false;
+            _sttError = err;
+          });
+        },
+      );
+      setState(() {
+        _isListening = _sttService.isListening;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,15 +103,62 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        l10n.text('askHeader').toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.foregroundSubtle,
-                          letterSpacing: 0.8,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            l10n.text('askHeader').toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.foregroundSubtle,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          InkWell(
+                            onTap: _toggleSpeechToText,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                              decoration: BoxDecoration(
+                                color: _isListening
+                                    ? AppColors.errorBg
+                                    : AppColors.surfaceHighlight,
+                                border: Border.all(
+                                  color: _isListening ? AppColors.error : AppColors.straw,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _isListening ? Icons.mic : Icons.mic_none,
+                                    size: 14,
+                                    color: _isListening ? AppColors.error : AppColors.straw,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _isListening
+                                        ? (isTamil ? 'பேசுகிறீர்கள்...' : 'LISTENING...')
+                                        : (isTamil ? 'குரல் உள்ளீடு' : 'VOICE INPUT'),
+                                    style: TextStyle(
+                                      fontSize: 10.0,
+                                      fontWeight: FontWeight.bold,
+                                      color: _isListening ? AppColors.error : AppColors.straw,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                      if (_sttError != null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          _sttError!,
+                          style: const TextStyle(fontSize: 11.0, color: AppColors.foregroundMuted),
+                        ),
+                      ],
                       const SizedBox(height: 6),
                       TextField(
                         controller: _queryController,

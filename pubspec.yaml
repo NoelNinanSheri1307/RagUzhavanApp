@@ -38,6 +38,9 @@ dependencies:
   dio: ^5.11.1
   provider: ^6.1.5+1
   intl: ^0.20.2
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.2.2
+  google_mlkit_translation: ^0.13.0
 
 dev_dependencies:
   flutter_test:

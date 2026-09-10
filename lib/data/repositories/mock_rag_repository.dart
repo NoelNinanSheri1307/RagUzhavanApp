@@ -17,6 +17,10 @@ class MockRagRepository implements RagRepository {
 
     final text = query.questionText.toLowerCase();
 
+    if (text.contains('disconnected') || text.contains('backend disconnected')) {
+      return fetchPresetScenarioResponse('disconnected', language: query.language);
+    }
+
     if (!text.contains('thanjavur') &&
         !text.contains('coimbatore') &&
         !text.contains('ramanathapuram') &&
@@ -40,7 +44,8 @@ class MockRagRepository implements RagRepository {
       return fetchPresetScenarioResponse('tamil_grounded', language: 'ta');
     }
 
-    return fetchPresetScenarioResponse('grounded', language: query.language);
+    // Default for unhandled custom queries when backend is disconnected
+    return fetchPresetScenarioResponse('disconnected', language: query.language);
   }
 
   @override
@@ -48,6 +53,43 @@ class MockRagRepository implements RagRepository {
     await Future.delayed(const Duration(milliseconds: 300));
 
     switch (scenarioKey) {
+      case 'disconnected':
+        return RagResponse(
+          id: 'RESP-DISCONNECTED-00',
+          queryId: 'QUERY-DISCONNECTED',
+          responseText:
+              'Your question was received, but the RagUzhavan backend is not connected yet. Connect API_BASE_URL in Settings to receive live grounded regional advisories.',
+          responseTextTamil:
+              'உங்கள் கேள்வி பெறப்பட்டது, ஆனால் ரக் உழவன் பின்தள இணைப்பு இன்னும் இணைக்கப்படவில்லை. நேரலை வேளாண் தகவல்களைப் பெற அமைப்புகளில் API_BASE_URL ஐ இணைக்கவும்.',
+          recommendationSummary: 'BACKEND NOT CONNECTED (AUTONOMOUS FRONTEND MODE)',
+          recommendationSummaryTamil: 'பின்தள இணைப்பு இல்லை (சுயாதீன முன்முனை பயன்முறை)',
+          whatToDo: 'Set API_BASE_URL to your Railway backend deployment URL in Settings.',
+          whatToDoTamil: 'அமைப்புகளில் உங்களின் Railway பின்தள முகவரியை வழங்கவும்.',
+          whenToApply: 'N/A — Autonomous Mode',
+          whenToApplyTamil: 'பொருந்தாது',
+          howMuchAmount: 'N/A',
+          howMuchAmountTamil: 'பொருந்தாது',
+          whyReason: 'The frontend explicitly refrains from presenting mock/fabricated answers as live backend responses.',
+          whyReasonTamil: 'முன்முனை பயன்பாடு போலி பதில்களை நேரலை பதிவுகளாகக் காட்டுவதைத் தவிர்க்கிறது.',
+          groundingScore: 0.0,
+          ruleId: 'RULE-DISCONNECTED-00',
+          citedProvenance: 'RagUzhavan Frontend State Engine',
+          language: language,
+          isGrounded: false,
+          status: ResponseStatus.noData,
+          stateName: 'Tamil Nadu',
+          districtName: 'Unconnected Backend',
+          blockName: 'Unconnected Block',
+          blockNameTamil: 'இணைக்கப்படாத வட்டாரம்',
+          cropName: 'Target Crop',
+          growthStage: 'N/A',
+          season: 'N/A',
+          averageDataAgeDays: 0,
+          timestamp: DateTime.now(),
+          evidenceSources: const [],
+          clarificationQuestions: const [],
+        );
+
       case 'clarification_location':
         return RagResponse(
           id: 'RESP-MOCK-CLARIFY-LOC-01',

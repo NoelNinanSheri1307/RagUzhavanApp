@@ -1,6 +1,6 @@
 {
-    "name": "rag_uzhavan",
-    "short_name": "rag_uzhavan",
+    "name": "RagUzhavan",
+    "short_name": "RagUzhavan",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

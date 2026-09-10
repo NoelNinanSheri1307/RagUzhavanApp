@@ -7,6 +7,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../data/models/farmer.dart';
 import '../../data/repositories/rag_repository.dart';
 import '../../data/repositories/mock_rag_repository.dart';
+import '../../core/config/app_config.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
@@ -23,6 +24,7 @@ class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
   final RagRepository _repository = MockRagRepository();
   List<Farmer> _allFarmers = [];
   bool _isLoading = true;
+  bool _showTestRoster = false;
 
   // Filters
   String _selectedDistrict = 'All';
@@ -211,9 +213,45 @@ class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
                       FieldNotebookCard(
                         title: 'ENROLLED FARMER DIRECTORY',
                         subtitle: 'Calm regional table with verified account status and activity logs',
-                        tagText: '${filtered.length} OF ${_allFarmers.length} RECORDS',
+                        tagText: const AppConfig().isMockMode ? 'MOCK / DISCONNECTED MODE' : '${filtered.length} OF ${_allFarmers.length} RECORDS',
                         tagColor: AppColors.straw,
-                        child: filtered.isEmpty
+                        child: (const AppConfig().isMockMode && !_showTestRoster)
+                            ? Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 24.0),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(14.0),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.warningBg,
+                                        border: Border.all(color: AppColors.straw),
+                                      ),
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.cloud_off_outlined, color: AppColors.straw, size: 20),
+                                          SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              'AUTONOMOUS FRONTEND MODE: Backend is currently not connected. Enrolled farmer directory will populate from GET /farmers when API_BASE_URL is set in Settings.',
+                                              style: TextStyle(fontSize: 12.0, color: AppColors.paper, height: 1.4),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    OutlinedButton(
+                                      onPressed: () => setState(() => _showTestRoster = true),
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(color: AppColors.straw),
+                                        foregroundColor: AppColors.straw,
+                                      ),
+                                      child: const Text('LOAD DEVELOPMENT MOCK ROSTER FOR LAYOUT AUDIT'),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : filtered.isEmpty
                             ? Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 40.0),
                                 child: Center(

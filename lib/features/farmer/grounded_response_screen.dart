@@ -9,6 +9,8 @@ import '../../core/utils/date_formatter.dart';
 import '../../data/models/rag_response.dart';
 import '../../data/repositories/rag_repository.dart';
 import '../../data/repositories/mock_rag_repository.dart';
+import '../../core/services/text_to_speech_service.dart';
+import '../../core/services/translation_service.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
@@ -30,14 +32,25 @@ class GroundedResponseScreen extends StatefulWidget {
 
 class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
   final RagRepository _repository = MockRagRepository();
+  final TextToSpeechService _ttsService = AppTextToSpeechService();
+  final TranslationService _translationService = AppTranslationService();
+
   RagResponse? _response;
   bool _isLoading = true;
+  bool _isSpeaking = false;
+  String? _ttsErrorMessage;
   final Map<String, String> _clarificationAnswers = {};
 
   @override
   void initState() {
     super.initState();
     _loadResponse();
+  }
+
+  @override
+  void dispose() {
+    _ttsService.stop();
+    super.dispose();
   }
 
   @override
@@ -57,6 +70,55 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
         _response = res;
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _toggleSpeechPlayback(String spokenText, String lang) async {
+    if (_isSpeaking) {
+      await _ttsService.stop();
+      setState(() => _isSpeaking = false);
+    } else {
+      setState(() {
+        _ttsErrorMessage = null;
+        _isSpeaking = true;
+      });
+      await _ttsService.speak(
+        spokenText,
+        languageCode: lang,
+        onError: (err) {
+          setState(() {
+            _isSpeaking = false;
+            _ttsErrorMessage = err;
+          });
+        },
+      );
+    }
+  }
+
+  Future<void> _translateResponseOnDevice() async {
+    if (_response == null) return;
+    final sourceLang = _response!.language;
+    final targetLang = sourceLang == 'ta' ? 'en' : 'ta';
+    final translated = await _translationService.translateText(
+      text: _response!.recommendationSummary,
+      sourceLanguage: sourceLang,
+      targetLanguage: targetLang,
+      onError: (err) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('On-Device Translation: $err')),
+          );
+        }
+      },
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('On-Device ML Kit Translation: $translated'),
+          duration: const Duration(seconds: 4),
+        ),
+      );
     }
   }
 
@@ -173,9 +235,81 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                             subtitle: '${_response!.districtName} District · ${_response!.blockName} Block · ${_response!.cropName} (${_response!.growthStage})',
                             tagText: 'RULE EVALUATED',
                             tagColor: AppColors.field,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                InkWell(
+                                  onTap: _translateResponseOnDevice,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surfaceHighlight,
+                                      border: Border.all(color: AppColors.leaf),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.translate, size: 13, color: AppColors.leaf),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          isTamil ? 'மொழிபெயர்' : 'TRANSLATE',
+                                          style: const TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.leaf,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                InkWell(
+                                  onTap: () {
+                                    final textToSpeak = isTamil && _response!.recommendationSummaryTamil.isNotEmpty
+                                        ? '${_response!.recommendationSummaryTamil}. ${_response!.whyReasonTamil}'
+                                        : '${_response!.recommendationSummary}. ${_response!.whyReason}';
+                                    _toggleSpeechPlayback(textToSpeak, isTamil ? 'ta' : 'en');
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+                                    decoration: BoxDecoration(
+                                      color: _isSpeaking ? AppColors.errorBg : AppColors.surfaceHighlight,
+                                      border: Border.all(color: _isSpeaking ? AppColors.error : AppColors.straw),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _isSpeaking ? Icons.pause : Icons.volume_up_outlined,
+                                          size: 13,
+                                          color: _isSpeaking ? AppColors.error : AppColors.straw,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _isSpeaking ? (isTamil ? 'நிறுத்து' : 'STOP') : (isTamil ? 'கேட்க' : 'LISTEN'),
+                                          style: TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: _isSpeaking ? AppColors.error : AppColors.straw,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                if (_ttsErrorMessage != null) ...[
+                                  Text(
+                                    _ttsErrorMessage!,
+                                    style: const TextStyle(fontSize: 11.0, color: AppColors.warning),
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
                                 // RECOMMENDATION
                                 _buildStructuredSection(
                                   label: l10n.text('secRecommendation'),
@@ -381,25 +515,32 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
     IconData icon;
     String statusText;
 
-    switch (res.status) {
-      case ResponseStatus.grounded:
-        bg = AppColors.successBg;
-        border = AppColors.field;
-        icon = Icons.verified_outlined;
-        statusText = l10n.text('statusGrounded');
-        break;
-      case ResponseStatus.clarificationNeeded:
-        bg = AppColors.warningBg;
-        border = AppColors.warning;
-        icon = Icons.help_outline;
-        statusText = l10n.text('statusClarification');
-        break;
-      case ResponseStatus.noData:
-        bg = AppColors.errorBg;
-        border = AppColors.error;
-        icon = Icons.warning_amber_rounded;
-        statusText = l10n.text('statusNoData');
-        break;
+    if (res.ruleId == 'RULE-DISCONNECTED-00' || widget.scenarioKey == 'disconnected') {
+      bg = AppColors.warningBg;
+      border = AppColors.straw;
+      icon = Icons.cloud_off_outlined;
+      statusText = isTamil ? 'சுயாதீன பயன்முறை — பின்தள இணைப்பு இல்லை' : 'DEMO / BACKEND NOT CONNECTED';
+    } else {
+      switch (res.status) {
+        case ResponseStatus.grounded:
+          bg = AppColors.successBg;
+          border = AppColors.field;
+          icon = Icons.verified_outlined;
+          statusText = l10n.text('statusGrounded');
+          break;
+        case ResponseStatus.clarificationNeeded:
+          bg = AppColors.warningBg;
+          border = AppColors.warning;
+          icon = Icons.help_outline;
+          statusText = l10n.text('statusClarification');
+          break;
+        case ResponseStatus.noData:
+          bg = AppColors.errorBg;
+          border = AppColors.error;
+          icon = Icons.warning_amber_rounded;
+          statusText = l10n.text('statusNoData');
+          break;
+      }
     }
 
     return Container(

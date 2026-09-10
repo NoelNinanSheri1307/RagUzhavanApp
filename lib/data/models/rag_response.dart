@@ -1,5 +1,6 @@
 import 'evidence_source.dart';
 import 'clarification_question.dart';
+import 'numeric_recommendation.dart';
 
 enum ResponseStatus { grounded, clarificationNeeded, noData }
 
@@ -24,6 +25,7 @@ class RagResponse {
   final String ruleId;
   final String citedProvenance;
 
+  final List<NumericRecommendation> numericRecommendations;
   final String language;
   final bool isGrounded;
   final List<EvidenceSource> evidenceSources;
@@ -57,6 +59,7 @@ class RagResponse {
     required this.groundingScore,
     required this.ruleId,
     required this.citedProvenance,
+    this.numericRecommendations = const [],
     required this.language,
     required this.isGrounded,
     required this.evidenceSources,
@@ -100,6 +103,10 @@ class RagResponse {
       groundingScore: (json['groundingScore'] as num?)?.toDouble() ?? 0.94,
       ruleId: json['ruleId'] as String? ?? 'RULE-TNAU-BLAST-01',
       citedProvenance: json['citedProvenance'] as String? ?? 'TNAU Crop Production Guide 2025',
+      numericRecommendations: (json['numericRecommendations'] as List<dynamic>?)
+              ?.map((e) => NumericRecommendation.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       language: json['language'] as String? ?? 'en',
       isGrounded: json['isGrounded'] as bool? ?? true,
       evidenceSources: (json['evidenceSources'] as List<dynamic>?)
@@ -144,6 +151,7 @@ class RagResponse {
       'groundingScore': groundingScore,
       'ruleId': ruleId,
       'citedProvenance': citedProvenance,
+      'numericRecommendations': numericRecommendations.map((e) => e.toJson()).toList(),
       'language': language,
       'isGrounded': isGrounded,
       'evidenceSources': evidenceSources.map((e) => e.toJson()).toList(),

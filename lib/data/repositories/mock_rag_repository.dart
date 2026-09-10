@@ -4,6 +4,7 @@ import '../models/rag_query.dart';
 import '../models/rag_response.dart';
 import '../models/evidence_source.dart';
 import '../models/clarification_question.dart';
+import '../models/numeric_recommendation.dart';
 import '../models/region.dart';
 import '../models/field_sensor_data.dart';
 import '../models/low_bandwidth_message.dart';
@@ -258,6 +259,30 @@ class MockRagRepository implements RagRepository {
           groundingScore: 0.94,
           ruleId: 'RULE-TNAU-BLAST-01',
           citedProvenance: 'TNAU Crop Production Guide 2025 & ICAR-NRRI Advisory',
+          numericRecommendations: const [
+            NumericRecommendation(
+              parameter: 'Tricyclazole 75% WP Dosage',
+              value: 0.6,
+              unit: 'g/L',
+              ruleId: 'RULE-TNAU-BLAST-01',
+              sourceTitle: 'TNAU Crop Production Guide 2025',
+              publicationDate: '2025-05-10',
+              retrievedDate: '2026-09-08',
+              region: 'Thanjavur Delta',
+              cropApplicability: 'Paddy / Rice',
+            ),
+            NumericRecommendation(
+              parameter: 'MOP Potash Fertilizer',
+              value: 50.0,
+              unit: 'kg/ha',
+              ruleId: 'RULE-ICAR-POTASH-04',
+              sourceTitle: 'ICAR-NRRI Kuruvai Advisory',
+              publicationDate: '2025-05-28',
+              retrievedDate: '2026-09-08',
+              region: 'Thanjavur Delta',
+              cropApplicability: 'Paddy / Rice',
+            ),
+          ],
           language: language,
           isGrounded: true,
           status: ResponseStatus.grounded,
@@ -436,39 +461,82 @@ class MockRagRepository implements RagRepository {
   @override
   Future<List<Farmer>> fetchFarmersList() async {
     await Future.delayed(const Duration(milliseconds: 300));
-    return const [
+    final now = DateTime.now();
+    return [
       Farmer(
         id: 'FARM-001',
         name: 'M. Palanisamy',
         phone: '+91 98421 88321',
-        district: 'Thanjavur (Budalur block)',
+        district: 'Thanjavur',
+        block: 'Budalur',
         state: 'Tamil Nadu',
         preferredLanguage: 'ta',
-        crops: ['Paddy', 'Blackgram'],
+        crops: ['Paddy / Rice', 'Blackgram'],
         landSizeAcres: 4.5,
         agroZone: 'Cauvery Delta Zone',
+        season: 'Kuruvai',
+        accountStatus: 'Active',
+        lastActivity: now.subtract(const Duration(minutes: 15)),
       ),
       Farmer(
         id: 'FARM-002',
         name: 'K. Arumugam',
         phone: '+91 97892 41105',
-        district: 'Coimbatore (Thondamuthur block)',
+        district: 'Coimbatore',
+        block: 'Thondamuthur',
         state: 'Tamil Nadu',
         preferredLanguage: 'en',
         crops: ['Cotton', 'Maize'],
         landSizeAcres: 8.0,
         agroZone: 'Western Zone',
+        season: 'Kharif',
+        accountStatus: 'Active',
+        lastActivity: now.subtract(const Duration(hours: 3)),
       ),
       Farmer(
         id: 'FARM-003',
         name: 'S. Ramanathan',
         phone: '+91 94431 09277',
-        district: 'Ramanathapuram (Kadaladi block)',
+        district: 'Ramanathapuram',
+        block: 'Kadaladi',
         state: 'Tamil Nadu',
         preferredLanguage: 'ta',
         crops: ['Groundnut', 'Chilli'],
         landSizeAcres: 3.2,
         agroZone: 'Coastal Dry Zone',
+        season: 'Late Rabi',
+        accountStatus: 'Pending Review',
+        lastActivity: now.subtract(const Duration(days: 1, hours: 2)),
+      ),
+      Farmer(
+        id: 'FARM-004',
+        name: 'V. Sundaram',
+        phone: '+91 98765 12345',
+        district: 'Thanjavur',
+        block: 'Kumbakonam',
+        state: 'Tamil Nadu',
+        preferredLanguage: 'ta',
+        crops: ['Paddy / Rice', 'Sugarcane'],
+        landSizeAcres: 6.0,
+        agroZone: 'Cauvery Delta Zone',
+        season: 'Samba',
+        accountStatus: 'Active',
+        lastActivity: now.subtract(const Duration(minutes: 42)),
+      ),
+      Farmer(
+        id: 'FARM-005',
+        name: 'R. Meenakshi',
+        phone: '+91 99440 98765',
+        district: 'Madurai',
+        block: 'Thiruparankundram',
+        state: 'Tamil Nadu',
+        preferredLanguage: 'ta',
+        crops: ['Jasmine', 'Pulses'],
+        landSizeAcres: 2.8,
+        agroZone: 'Southern Zone',
+        season: 'Chithirai',
+        accountStatus: 'Flagged',
+        lastActivity: now.subtract(const Duration(days: 2)),
       ),
     ];
   }

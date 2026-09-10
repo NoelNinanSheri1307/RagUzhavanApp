@@ -116,11 +116,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           name: _nameController.text,
                           phone: _phoneController.text,
                           district: _selectedDistrict,
+                          block: 'Budalur',
                           state: 'Tamil Nadu',
                           preferredLanguage: 'ta',
                           crops: [_selectedCrop],
                           landSizeAcres: double.tryParse(_acresController.text) ?? 4.0,
                           agroZone: 'Cauvery Delta Zone',
+                          season: 'Kuruvai',
+                          accountStatus: 'Active',
+                          lastActivity: DateTime.now(),
                         );
                         authService.loginAsFarmer(farmer);
                         context.go('/farmer');

@@ -6,6 +6,7 @@ import '../../core/utils/date_formatter.dart';
 import '../../data/models/evidence_source.dart';
 import '../../data/models/rag_response.dart';
 import '../animations/editorial_transitions.dart';
+import 'evidence_detail_dialog.dart';
 
 class EvidenceDrawer extends StatefulWidget {
   final RagResponse response;
@@ -77,6 +78,7 @@ class _EvidenceDrawerState extends State<EvidenceDrawer> {
     }
 
     final sources = widget.response.evidenceSources;
+    final numerics = widget.response.numericRecommendations;
 
     return Container(
       decoration: BoxDecoration(
@@ -137,16 +139,85 @@ class _EvidenceDrawerState extends State<EvidenceDrawer> {
 
           UnfoldCard(
             isExpanded: _isExpanded,
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(14.0),
-              itemCount: sources.length,
-              separatorBuilder: (context, index) => const Divider(height: 20.0),
-              itemBuilder: (context, index) {
-                final source = sources[index];
-                return _buildEvidenceItem(source, l10n);
-              },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (numerics.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
+                    child: Text(
+                      'NUMERIC RECOMMENDATION PROVENANCE',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.straw,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
+                    itemCount: numerics.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 6),
+                    itemBuilder: (context, index) {
+                      final numRec = numerics[index];
+                      return Container(
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceHighlight,
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  numRec.parameter,
+                                  style: const TextStyle(fontSize: 12.0, fontWeight: FontWeight.w600, color: AppColors.paper),
+                                ),
+                                Text(
+                                  'Rule: ${numRec.ruleId} · ${numRec.sourceTitle}',
+                                  style: const TextStyle(fontSize: 10.0, fontFamily: 'monospace', color: AppColors.foregroundSubtle),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.field),
+                              ),
+                              child: Text(
+                                '${numRec.value} ${numRec.unit}',
+                                style: const TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold, color: AppColors.leaf),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 16),
+                ],
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(14.0),
+                  itemCount: sources.length,
+                  separatorBuilder: (context, index) => const Divider(height: 20.0),
+                  itemBuilder: (context, index) {
+                    final source = sources[index];
+                    return InkWell(
+                      onTap: () => EvidenceDetailDialog.show(context, source),
+                      child: _buildEvidenceItem(source, l10n),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ],
@@ -176,22 +247,28 @@ class _EvidenceDrawerState extends State<EvidenceDrawer> {
                 ),
               ),
             ),
-            if (source.isVerified)
-              Container(
-                margin: const EdgeInsets.only(left: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.field),
-                ),
-                child: Text(
-                  widget.locale == 'ta' ? 'உறுதி செய்யப்பட்டது' : 'VERIFIED',
-                  style: const TextStyle(
-                    fontSize: 9.0,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.leaf,
+            Row(
+              children: [
+                if (source.isVerified)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.field),
+                    ),
+                    child: Text(
+                      widget.locale == 'ta' ? 'உறுதி செய்யப்பட்டது' : 'VERIFIED',
+                      style: const TextStyle(
+                        fontSize: 9.0,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.leaf,
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                const SizedBox(width: 4),
+                const Icon(Icons.open_in_new, size: 14, color: AppColors.straw),
+              ],
+            ),
           ],
         ),
         const SizedBox(height: 6),
@@ -244,11 +321,11 @@ class _EvidenceDrawerState extends State<EvidenceDrawer> {
               ),
             ),
             Text(
-              'REF: ${source.urlOrRef}',
+              'TAP FOR FULL DETAILS · ${source.datasetAgeDays}d OLD',
               style: const TextStyle(
                 fontSize: 10.0,
                 fontFamily: 'monospace',
-                color: AppColors.foregroundSubtle,
+                color: AppColors.straw,
               ),
             ),
           ],
@@ -257,3 +334,4 @@ class _EvidenceDrawerState extends State<EvidenceDrawer> {
     );
   }
 }
+

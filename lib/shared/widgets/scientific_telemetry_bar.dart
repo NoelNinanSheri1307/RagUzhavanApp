@@ -43,6 +43,25 @@ class ScientificTelemetryBar extends StatelessWidget {
                       letterSpacing: 0.8,
                     ),
                   ),
+                  if (sensorData.isDemoData) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.warningText.withValues(alpha: 0.15),
+                        border: Border.all(color: AppColors.warningText.withValues(alpha: 0.5)),
+                      ),
+                      child: const Text(
+                        'DEMO DATA',
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.warningText,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
               Text(
@@ -58,30 +77,71 @@ class ScientificTelemetryBar extends StatelessWidget {
           const SizedBox(height: 10),
           LayoutBuilder(
             builder: (context, constraints) {
-              final itemWidth = (constraints.maxWidth - 24) / 4;
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              final isWide = constraints.maxWidth > 500;
+              final itemCount = isWide ? 6 : 3;
+              final itemWidth = (constraints.maxWidth - ((itemCount - 1) * 8)) / itemCount;
+              return Column(
                 children: [
-                  _buildMetricItem(
-                    label: currentLocale == 'ta' ? 'ஈரப்பதம்' : 'Moisture',
-                    value: '${sensorData.soilMoisturePct.toStringAsFixed(1)}%',
-                    width: itemWidth,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildMetricItem(
+                        label: currentLocale == 'ta' ? 'ஈரப்பதம்' : 'Moisture',
+                        value: '${sensorData.soilMoisturePct.toStringAsFixed(1)}%',
+                        width: itemWidth,
+                      ),
+                      _buildMetricItem(
+                        label: currentLocale == 'ta' ? 'வெப்பநிலை' : 'Temp',
+                        value: '${sensorData.temperatureCelsius.toStringAsFixed(1)}°C',
+                        width: itemWidth,
+                      ),
+                      _buildMetricItem(
+                        label: currentLocale == 'ta' ? 'நைட்ரஜன்' : 'Nitrogen',
+                        value: '${sensorData.nitrogenPpm.toStringAsFixed(0)} ppm',
+                        width: itemWidth,
+                      ),
+                      if (isWide) ...[
+                        _buildMetricItem(
+                          label: currentLocale == 'ta' ? 'மண் pH' : 'Soil pH',
+                          value: sensorData.phLevel.toStringAsFixed(1),
+                          width: itemWidth,
+                        ),
+                        _buildMetricItem(
+                          label: currentLocale == 'ta' ? 'நீர் மட்டம்' : 'Water Lvl',
+                          value: '${sensorData.waterLevel.toStringAsFixed(1)} cm',
+                          width: itemWidth,
+                        ),
+                        _buildMetricItem(
+                          label: currentLocale == 'ta' ? 'சூரிய ஒளி' : 'Light',
+                          value: '${(sensorData.ambientLight / 1000).toStringAsFixed(0)}k lx',
+                          width: itemWidth,
+                        ),
+                      ],
+                    ],
                   ),
-                  _buildMetricItem(
-                    label: currentLocale == 'ta' ? 'வெப்பநிலை' : 'Temp',
-                    value: '${sensorData.temperatureCelsius.toStringAsFixed(1)}°C',
-                    width: itemWidth,
-                  ),
-                  _buildMetricItem(
-                    label: currentLocale == 'ta' ? 'நைட்ரஜன்' : 'Nitrogen',
-                    value: '${sensorData.nitrogenPpm.toStringAsFixed(0)} ppm',
-                    width: itemWidth,
-                  ),
-                  _buildMetricItem(
-                    label: currentLocale == 'ta' ? 'மண் pH' : 'Soil pH',
-                    value: sensorData.phLevel.toStringAsFixed(1),
-                    width: itemWidth,
-                  ),
+                  if (!isWide) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildMetricItem(
+                          label: currentLocale == 'ta' ? 'மண் pH' : 'Soil pH',
+                          value: sensorData.phLevel.toStringAsFixed(1),
+                          width: itemWidth,
+                        ),
+                        _buildMetricItem(
+                          label: currentLocale == 'ta' ? 'நீர் மட்டம்' : 'Water Lvl',
+                          value: '${sensorData.waterLevel.toStringAsFixed(1)} cm',
+                          width: itemWidth,
+                        ),
+                        _buildMetricItem(
+                          label: currentLocale == 'ta' ? 'சூரிய ஒளி' : 'Light',
+                          value: '${(sensorData.ambientLight / 1000).toStringAsFixed(0)}k lx',
+                          width: itemWidth,
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               );
             },
@@ -121,7 +181,7 @@ class ScientificTelemetryBar extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-              fontSize: 13.0,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
               color: AppColors.straw,
             ),
@@ -131,3 +191,4 @@ class ScientificTelemetryBar extends StatelessWidget {
     );
   }
 }
+

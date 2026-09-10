@@ -29,12 +29,27 @@ abstract class AppColors {
 
   // Status & Telemetry
   static const Color warning = Color(0xFFD97706);
+  static const Color warningText = Color(0xFFD97706);
   static const Color warningBg = Color(0xFF2B1D08);
   static const Color error = Color(0xFFC94A29);
   static const Color errorBg = Color(0xFF2B120C);
   static const Color success = Color(0xFF71835B);
   static const Color successBg = Color(0xFF172412);
+  static const Color accentGreen = Color(0xFF71835B);
+  static const Color accentSoil = Color(0xFFC7A86B);
+  static const Color primary = Color(0xFFC7A86B);
+  static const Color primaryMuted = Color(0xFF71835B);
   static const Color info = Color(0xFFC7A86B);
+
+  // Surface & Text Aliases
+  static const Color darkSurface = Color(0xFF12110E);
+  static const Color lightSurface = Color(0xFFF9F7F1);
+  static const Color darkBorder = Color(0xFF26231D);
+  static const Color lightBorder = Color(0xFFD6CFC4);
+  static const Color darkTextPrimary = Color(0xFFF4F1E8);
+  static const Color lightTextPrimary = Color(0xFF1E1C18);
+  static const Color darkTextSecondary = Color(0xFFA39E93);
+  static const Color lightTextSecondary = Color(0xFF5A554C);
 
   // Overlay
   static const Color scrim = Color(0x99000000);

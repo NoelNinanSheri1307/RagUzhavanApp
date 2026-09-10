@@ -17,8 +17,11 @@ class AskQuestionScreen extends StatefulWidget {
 
 class _AskQuestionScreenState extends State<AskQuestionScreen> {
   final _queryController = TextEditingController(
-    text: 'What is the recommended fungicide treatment for rice blast in Thanjavur clay soil during Kuruvai season?',
+    text: 'Should I irrigate my paddy field this week in Budalur block?',
   );
+
+  String _district = 'Thanjavur';
+  String _block = 'Budalur';
   String _selectedCrop = 'Paddy / Rice';
   String _growthStage = 'Tillering Phase';
   String _irrigationType = 'Canal-fed Alluvial';
@@ -27,10 +30,11 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
   bool _isSubmitting = false;
 
   final List<String> _presetQueries = const [
-    'What is the recommended treatment for rice blast in Thanjavur clay soil during Kuruvai season?',
-    'How to manage cotton bollworm pest attack in Coimbatore black cotton soil?',
-    'Are there recent advisories for groundnut aphid control in Ramanathapuram dryland zone?',
-    'தஞ்சாவூர் குறுவை நெல் குலை நோய் தடுப்பு மருந்துகள் யாவை?',
+    'Should I irrigate my paddy field this week in Budalur block?',
+    'What is the recommended fungicide treatment for rice blast in Thanjavur clay soil?',
+    'How to manage cotton bollworm attack in Thondamuthur block, Coimbatore?',
+    'Are there recent groundnut advisories for Kadaladi block in Ramanathapuram?',
+    'தஞ்சாவூர் பூதலூர் வட்டார நெல் குலை நோய் தடுப்பு மருந்துகள் யாவை?',
   ];
 
   @override
@@ -55,7 +59,7 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
               children: [
                 FieldNotebookCard(
                   title: 'AGRICULTURAL ENQUIRY FORM',
-                  subtitle: 'Specify question and field parameters for grounded retrieval',
+                  subtitle: 'Specify natural-language question and field context parameters',
                   tagText: 'RAG QUERY FORM',
                   tagColor: AppColors.straw,
                   child: Column(
@@ -87,14 +91,45 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
 
                       const Divider(),
                       const SizedBox(height: 12),
+
                       Text(
-                        'FIELD PARAMETERS (DISTRICT: THANJAVUR)',
+                        'COLLECTED FIELD CONTEXT (DISTRICT -> BLOCK)',
                         style: const TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
                           color: AppColors.leaf,
                           letterSpacing: 0.8,
                         ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildParameterDropdown(
+                              label: l10n.text('districtContext'),
+                              value: _district,
+                              items: const ['Thanjavur', 'Coimbatore', 'Ramanathapuram', 'Madurai', 'Omit District (Test Clarification)'],
+                              onChanged: (val) => setState(() {
+                                _district = val!;
+                                if (_district == 'Coimbatore') _block = 'Thondamuthur';
+                                if (_district == 'Ramanathapuram') _block = 'Kadaladi';
+                                if (_district == 'Madurai') _block = 'Thiruparankundram';
+                                if (_district == 'Thanjavur') _block = 'Budalur';
+                                if (_district.contains('Omit')) _block = 'Omit Block';
+                              }),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildParameterDropdown(
+                              label: l10n.text('blockContext'),
+                              value: _block,
+                              items: const ['Budalur', 'Thondamuthur', 'Kadaladi', 'Thiruparankundram', 'Omit Block'],
+                              onChanged: (val) => setState(() => _block = val!),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
 
@@ -185,7 +220,7 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                                       style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.paper),
                                     ),
                                     Text(
-                                      isTamil ? '2G குறுஞ்செய்தி வழி சுருக்கப்பட்ட தரவு' : 'Compress payload for 2G / SMS transmission',
+                                      isTamil ? '2G குறுஞ்செய்தி வழி சுருக்கப்பட்ட தரவு (50 KB Max)' : 'Compress payload for 2G / SMS transmission (50 KB Limit)',
                                       style: const TextStyle(fontSize: 10.5, color: AppColors.foregroundSubtle),
                                     ),
                                   ],
@@ -308,11 +343,13 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
     final text = _queryController.text.toLowerCase();
 
     String scenario = 'grounded';
-    if (text.contains('cotton') || text.contains('clarify') || text.contains('bollworm')) {
-      scenario = 'clarification';
-    } else if (text.contains('groundnut') || text.contains('no data') || text.contains('aphid')) {
+    if (_district.contains('Omit') || _block.contains('Omit') || text.contains('clarify location')) {
+      scenario = 'clarification_location';
+    } else if (_district == 'Ramanathapuram' || _block == 'Kadaladi' || text.contains('kadaladi')) {
       scenario = 'no_data';
-    } else if (text.contains('தமிழ்') || text.contains('குறுவை')) {
+    } else if (_selectedCrop.contains('Cotton') || text.contains('cotton')) {
+      scenario = 'clarification_cotton';
+    } else if (text.contains('தமிழ்') || text.contains('நெல்')) {
       scenario = 'tamil_grounded';
     }
 

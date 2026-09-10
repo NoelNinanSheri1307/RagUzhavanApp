@@ -12,17 +12,29 @@ import '../models/farmer.dart';
 class MockRagRepository implements RagRepository {
   @override
   Future<RagResponse> askQuestion(RagQuery query) async {
-    // Simulate brief network delay for editorial realism
-    await Future.delayed(const Duration(milliseconds: 700));
+    await Future.delayed(const Duration(milliseconds: 600));
 
     final text = query.questionText.toLowerCase();
 
-    if (text.contains('no data') || text.contains('groundnut') || text.contains('dryland')) {
+    if (!text.contains('thanjavur') &&
+        !text.contains('coimbatore') &&
+        !text.contains('ramanathapuram') &&
+        !text.contains('madurai') &&
+        !text.contains('budalur') &&
+        !text.contains('kadaladi') &&
+        !text.contains('தஞ்சாவூர்') &&
+        query.regionId.isEmpty) {
+      return fetchPresetScenarioResponse('clarification_location', language: query.language);
+    }
+
+    if (text.contains('kadaladi') || text.contains('no data') || text.contains('groundnut')) {
       return fetchPresetScenarioResponse('no_data', language: query.language);
     }
-    if (text.contains('cotton') || text.contains('clarify') || text.contains('drainage')) {
-      return fetchPresetScenarioResponse('clarification', language: query.language);
+
+    if (text.contains('cotton') || text.contains('bollworm') || text.contains('clarify')) {
+      return fetchPresetScenarioResponse('clarification_cotton', language: query.language);
     }
+
     if (query.language == 'ta' || text.contains('தமிழ்') || text.contains('நெல்')) {
       return fetchPresetScenarioResponse('tamil_grounded', language: 'ta');
     }
@@ -35,19 +47,84 @@ class MockRagRepository implements RagRepository {
     await Future.delayed(const Duration(milliseconds: 300));
 
     switch (scenarioKey) {
+      case 'clarification_location':
+        return RagResponse(
+          id: 'RESP-MOCK-CLARIFY-LOC-01',
+          queryId: 'QUERY-LOC-01',
+          responseText:
+              'I need one more detail before grounding your advisory: Which district and block is your field located in?',
+          responseTextTamil:
+              'உங்கள் வயல் எந்த மாவட்டம் மற்றும் வட்டாரத்தில் உள்ளது என்ற கூடுதல் விவரம் தேவை:',
+          recommendationSummary: 'Location specification required for micro-climatic grounding.',
+          recommendationSummaryTamil: 'துல்லியமான மண்டலப் பரிந்துரைக்கு இருப்பிடக் விவரம் தேவை.',
+          whatToDo: 'Select your active district and block scope below.',
+          whatToDoTamil: 'கீழே உங்களின் மாவட்டம் மற்றும் வட்டாரத்தைத் தேர்ந்தெடுக்கவும்.',
+          whenToApply: 'Immediate action prior to processing query.',
+          whenToApplyTamil: 'கேள்வியைச் செயலாக்கும் முன் தேவைப்படும் நடவடிக்கை.',
+          howMuchAmount: 'N/A',
+          howMuchAmountTamil: 'பொருந்தாது',
+          whyReason: 'Extension bulletins vary significantly across Cauvery Delta alluvial clay vs Western Vertisol blocks.',
+          whyReasonTamil: 'காவேரி டெல்டா வண்டல் மண் மற்றும் மேற்கு மண்டல கரிசல் மண் பரிந்துரைகள் மாறுபடும்.',
+          groundingScore: 0.0,
+          ruleId: 'RULE-DISCOVERY-LOC-00',
+          citedProvenance: 'RagUzhavan Micro-Climatic Rule Engine',
+          language: language,
+          isGrounded: false,
+          status: ResponseStatus.clarificationNeeded,
+          stateName: 'Tamil Nadu',
+          districtName: 'Unspecified District',
+          blockName: 'Unspecified Block',
+          blockNameTamil: 'குறிப்பிடப்படாத வட்டாரம்',
+          cropName: 'Paddy / Rice',
+          growthStage: 'Tillering',
+          season: 'Kuruvai',
+          averageDataAgeDays: 0,
+          timestamp: DateTime.now(),
+          evidenceSources: const [],
+          clarificationQuestions: const [
+            ClarificationQuestion(
+              id: 'CLARIFY-DISTRICT-01',
+              questionText: 'Select your field district jurisdiction:',
+              questionTextTamil: 'உங்கள் வயல் அமைந்துள்ள மாவட்டத்தைத் தேர்ந்தெடுக்கவும்:',
+              fieldName: 'districtName',
+              options: ['Thanjavur (Cauvery Delta)', 'Coimbatore (Western Zone)', 'Ramanathapuram (Coastal Dry)', 'Madurai (Southern Zone)'],
+              optionsTamil: ['தஞ்சாவூர் (காவேரி டெல்டா)', 'கோயம்புத்தூர் (மேற்கு மண்டலம்)', 'ராமநாதபுரம் (கடலோர உலர் மண்டலம்)', 'மதுரை (தெற்கு மண்டலம்)'],
+            ),
+          ],
+        );
+
+      case 'clarification_cotton':
       case 'clarification':
         return RagResponse(
           id: 'RESP-MOCK-CLARIFY-02',
           queryId: 'QUERY-102',
           responseText:
-              'To recommend precise bollworm management for your Cotton crop in Coimbatore, additional specific field conditions are needed before grounding advice in CICR protocols.',
+              'To recommend precise bollworm management for Cotton in Coimbatore (Thondamuthur block), additional specific field conditions are needed before matching CICR protocols.',
           responseTextTamil:
-              'கோயம்புத்தூர் பருத்திப் பயிரில் காய் புழு மேலாண்மைக்கு துல்லியமான பரிந்துரை வழங்க, தங்களின் நில வடிகால் மற்றும் பாசன விவரங்கள் தேவை.',
+              'கோயம்புத்தூர் தொண்டாமுத்தூர் வட்டாரப் பருத்திப் பயிரில் காய் புழு மேலாண்மைக்கு துல்லியமான பரிந்துரை வழங்க, தங்களின் நில வடிகால் மற்றும் பாசன விவரங்கள் தேவை.',
+          recommendationSummary: 'Field drainage and irrigation method specification required.',
+          recommendationSummaryTamil: 'நில வடிகால் மற்றும் பாசன முறை விவரங்கள் தேவைப்படுகிறது.',
+          whatToDo: 'Provide field drainage type and active irrigation method.',
+          whatToDoTamil: 'நில வடிகால் அமைப்பு மற்றும் பாசன முறையைக் குறிப்பிடவும்.',
+          whenToApply: 'Before chemical spray application.',
+          whenToApplyTamil: 'மருந்து தெளிப்பதற்கு முன்.',
+          howMuchAmount: 'N/A',
+          howMuchAmountTamil: 'பொருந்தாது',
+          whyReason: 'Poorly drained Vertisols require lower spray volume to prevent root asphyxiation during boll formation.',
+          whyReasonTamil: 'குறைந்த வடிகால் கரிசல் நிலங்களில் வேர் அழுகலைத் தடுக்க தெளிப்பு அளவு மாறுபடும்.',
+          groundingScore: 0.45,
+          ruleId: 'RULE-CICR-COTTON-02',
+          citedProvenance: 'CICR Cotton Extension Bulletin 2025',
           language: language,
           isGrounded: false,
           status: ResponseStatus.clarificationNeeded,
+          stateName: 'Tamil Nadu',
           districtName: 'Coimbatore',
+          blockName: 'Thondamuthur',
+          blockNameTamil: 'தொண்டாமுத்தூர்',
           cropName: 'Cotton (MCU-5)',
+          growthStage: 'Boll Formation',
+          season: 'Kharif',
           averageDataAgeDays: 8,
           timestamp: DateTime.now().subtract(const Duration(hours: 2)),
           evidenceSources: const [],
@@ -76,14 +153,32 @@ class MockRagRepository implements RagRepository {
           id: 'RESP-MOCK-NODATA-03',
           queryId: 'QUERY-103',
           responseText:
-              'No grounded evidence was retrieved for Groundnut aphid pest dynamics in Ramanathapuram dryland zone for the current late-winter season. Existing station bulletins are older than 180 days.',
+              'No current data available for your block (Kadaladi block, Ramanathapuram district). Station bulletins for groundnut dryland pest dynamics are older than 194 days. The system refrains from substituting neighboring district data.',
           responseTextTamil:
-              'ராமநாதபுரம் மானாவாரி மண்டலத்தில் நடப்பு குளிர்காலத்திற்கான நிலக்கடலை அசுவினி பூச்சி பரவல் குறித்த சமீபத்திய ஆதாரப் பதிவுகள் கிடைக்கவில்லை. இருக்கும் தரவுகள் 180 நாட்களுக்கு முந்தையவை.',
+              'ராமநாதபுரம் மாவட்டம் கடலாடி வட்டாரத்திற்குரிய தற்போதைய தரவுகள் இல்லை. நிலக்கடலை அசுவினி பூச்சி பரவல் பற்றிய பதிவுகள் 194 நாட்களுக்கு முந்தையவை. கணினி பக்கத்து மாவட்டத் தரவுகளை மாற்றாக வழங்காது.',
+          recommendationSummary: 'No current extension advisory retrieved for Kadaladi block.',
+          recommendationSummaryTamil: 'கடலாடி வட்டாரத்திற்குரிய தற்போதைய வேளாண் அறிவுரை கிடைக்கவில்லை.',
+          whatToDo: 'Consult local Assistant Agricultural Officer (AAO) or await updated IMD/TNAU station release.',
+          whatToDoTamil: 'வட்டார உதவி வேளாண் அலுவலரை அனுகவும் அல்லது புதிய அறிவிப்பு வரை காத்திருக்கவும்.',
+          whenToApply: 'N/A',
+          whenToApplyTamil: 'பொருந்தாது',
+          howMuchAmount: '0 (Refrain from unsanctioned chemical sprays)',
+          howMuchAmountTamil: '0 (பரிந்துரைக்கப்படாத மருந்து தெளிப்பதைத் தவிர்க்கவும்)',
+          whyReason: 'Dataset age exceeds 180-day safety threshold for dryland pest outbreaks.',
+          whyReasonTamil: 'மானாவாரி பூச்சி மேலாண்மைத் தரவுகள் 180 நாட்கள் வரம்பைக் கடந்துவிட்டன.',
+          groundingScore: 0.0,
+          ruleId: 'RULE-STALENESS-EXPLICIT-00',
+          citedProvenance: 'TNAU Station Bulletin Threshold Engine',
           language: language,
           isGrounded: false,
           status: ResponseStatus.noData,
+          stateName: 'Tamil Nadu',
           districtName: 'Ramanathapuram',
+          blockName: 'Kadaladi',
+          blockNameTamil: 'கடலாடி',
           cropName: 'Groundnut (TMV-7)',
+          growthStage: 'Pegging',
+          season: 'Late Rabi / Dryland',
           averageDataAgeDays: 194,
           timestamp: DateTime.now().subtract(const Duration(hours: 5)),
           evidenceSources: const [],
@@ -95,14 +190,32 @@ class MockRagRepository implements RagRepository {
           id: 'RESP-MOCK-TA-04',
           queryId: 'QUERY-104',
           responseText:
-              'தஞ்சாவூர் குறுவை பருவத்தில் நெல் குலை நோயை (Pyricularia oryzae) கட்டுப்படுத்த, தமிழ்நாடு வேளாண்மைப் பல்கலைக்கழக (TNAU) வழிகாட்டுதலின்படி ட்ரைசைக்ளசோல் 75% WP (0.6 கிராம்/லிட்டர்) தெளிக்கவும். அதிக நைட்ரஜன் உரமிடுவதைத் தவிர்க்கவும்.',
+              'தஞ்சாவூர் மாவட்டம் பூதலூர் வட்டார குறுவை நெல் குலை நோயைக் கட்டுப்படுத்த, ட்ரைசைக்ளசோல் 75% WP மருந்தை 0.6 கிராம்/லிட்டர் தண்ணீரில் கலந்து தெளிக்கவும். நைட்ரஜன் உரத்தை 3 பங்காகப் பிரித்து இடவும்.',
           responseTextTamil:
-              'தஞ்சாவூர் குறுவை பருவத்தில் நெல் குலை நோயை (Pyricularia oryzae) கட்டுப்படுத்த, தமிழ்நாடு வேளாண்மைப் பல்கலைக்கழக (TNAU) வழிகாட்டுதலின்படி ட்ரைசைக்ளசோல் 75% WP (0.6 கிராம்/லிட்டர்) தெளிக்கவும். அதிக நைட்ரஜன் உரமிடுவதைத் தவிர்க்கவும்.',
+              'தஞ்சாவூர் மாவட்டம் பூதலூர் வட்டார குறுவை நெல் குலை நோயைக் கட்டுப்படுத்த, ட்ரைசைக்ளசோல் 75% WP மருந்தை 0.6 கிராம்/லிட்டர் தண்ணீரில் கலந்து தெளிக்கவும். நைட்ரஜன் உரத்தை 3 பங்காகப் பிரித்து இடவும்.',
+          recommendationSummary: 'ட்ரைசைக்ளசோல் 75% WP மருந்தை 0.6 கிராம்/லிட்டர் தெளிக்கவும்.',
+          recommendationSummaryTamil: 'ட்ரைசைக்ளசோல் 75% WP மருந்தை 0.6 கிராம்/லிட்டர் தெளிக்கவும்.',
+          whatToDo: 'இலையில் முதல் நோய் அறிகுறி தோன்றியவுடன் தெளிக்கவும்.',
+          whatToDoTamil: 'இலையில் முதல் நோய் அறிகுறி தோன்றியவுடன் தெளிக்கவும்.',
+          whenToApply: 'காலை 7:00 - 10:00 மணிக்குள் (இலை உலர்வாக இருக்கும்போது).',
+          whenToApplyTamil: 'காலை 7:00 - 10:00 மணிக்குள் (இலை உலர்வாக இருக்கும்போது).',
+          howMuchAmount: 'ஹெக்டேருக்கு 500 கிராம் ட்ரைசைக்ளசோல் 75% WP + 50 கிலோ பொட்டாஷ் உரப்பிரிப்பு.',
+          howMuchAmountTamil: 'ஹெக்டேருக்கு 500 கிராம் ட்ரைசைக்ளசோல் 75% WP + 50 கிலோ பொட்டாஷ் உரப்பிரிப்பு.',
+          whyReason: 'காவேரி டெல்டா களிமண் நிலங்களில் 85% இரவு நேர ஈரப்பதத்தில் குலை நோய் 92.4% கட்டுப்படுத்தப்படுகிறது.',
+          whyReasonTamil: 'காவேரி டெல்டா களிமண் நிலங்களில் 85% இரவு நேர ஈரப்பதத்தில் குலை நோய் 92.4% கட்டுப்படுத்தப்படுகிறது.',
+          groundingScore: 0.96,
+          ruleId: 'RULE-TNAU-BLAST-TA-01',
+          citedProvenance: 'தமிழ்நாடு வேளாண்மை பல்கலைக்கழக கையேடு 2025',
           language: 'ta',
           isGrounded: true,
           status: ResponseStatus.grounded,
+          stateName: 'தமிழ்நாடு',
           districtName: 'தஞ்சாவூர் (Thanjavur)',
+          blockName: 'Budalur',
+          blockNameTamil: 'பூதலூர் (Budalur)',
           cropName: 'நெல் / குறுவை (Paddy)',
+          growthStage: 'தூர்கட்டும் பருவம்',
+          season: 'குறுவை 2025',
           averageDataAgeDays: 11,
           timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
           evidenceSources: const [
@@ -112,24 +225,11 @@ class MockRagRepository implements RagRepository {
               publicationDate: '2025-06-15',
               authorOrInstitute: 'TNAU பயிர் பாதுகாப்பு மையம், கோயம்புத்தூர்',
               documentType: 'பல்கலைக்கழக ஆவணப் பதிவு',
-              excerpt: 'குறுவை பருவத்தில் களிமண் நிலங்களில் நெல் குலை நோய் தாக்குதல் அதிகரிக்கும் போது ட்ரைசைக்ளசோல் தெளிப்பு மற்றும் பொட்டாஷ் உரம் பிரித்து அளித்தல் அவசியம்.',
-              excerptTamil: 'குறுவை பருவத்தில் களிமண் நிலங்களில் நெல் குலை நோய் தாக்குதல் அதிகரிக்கும் போது ட்ரைசைக்ளசோல் தெளிப்பு மற்றும் பொட்டாஷ் உரம் பிரித்து அளித்தல் அவசியம்.',
+              excerpt: 'குறுவை பருவத்தில் களிமண் நிலங்களில் நெல் குலை நோய் தாக்குதல் அதிகரிக்கும் போது ட்ரைசைக்ளசோல் தெளிப்பு (0.6 கிராம்/லிட்டர்) 92.4% நோயைக் கட்டுப்படுத்துகிறது.',
+              excerptTamil: 'குறுவை பருவத்தில் களிமண் நிலங்களில் நெல் குலை நோய் தாக்குதல் அதிகரிக்கும் போது ட்ரைசைக்ளசோல் தெளிப்பு (0.6 கிராம்/லிட்டர்) 92.4% நோயைக் கட்டுப்படுத்துகிறது.',
               confidenceScore: 0.96,
               datasetAgeDays: 11,
               urlOrRef: 'TNAU-CPPS-BULLETIN-2025/RICE-BLAST',
-              isVerified: true,
-            ),
-            EvidenceSource(
-              id: 'EVID-TRRI-TA-02',
-              title: 'ஆடுதுறை நெல் ஆராய்ச்சி நிலைய தட்பவெப்ப எச்சரிக்கை பதிவு',
-              publicationDate: '2025-06-20',
-              authorOrInstitute: 'TRRI ஆடுதுறை, தஞ்சாவூர்',
-              documentType: 'மண்டல ஆராய்ச்சி மையம்',
-              excerpt: 'காவேரி டெல்டா மண்டலத்தில் இரவு நேர ஈரப்பதம் 85% கடக்கும் போது குலை நோய் வித்திகள் வேகமுறுகின்றன.',
-              excerptTamil: 'காவேரி டெல்டா மண்டலத்தில் இரவு நேர ஈரப்பதம் 85% கடக்கும் போது குலை நோய் வித்திகள் வேகமுறுகின்றன.',
-              confidenceScore: 0.93,
-              datasetAgeDays: 6,
-              urlOrRef: 'TRRI-ADUTHURAI-ALERT-88',
               isVerified: true,
             ),
           ],
@@ -142,14 +242,32 @@ class MockRagRepository implements RagRepository {
           id: 'RESP-MOCK-EN-01',
           queryId: 'QUERY-101',
           responseText:
-              'For Rice Blast (Pyricularia oryzae) management in Thanjavur clay soils during Kuruvai season: Apply Tricyclazole 75% WP @ 0.6 g/L water at initiation of blast lesions. Split Nitrogen application into 3 equal doses (basal, tillering, panicle initiation) and maintain 50 kg/ha Potash to reduce disease severity.',
+              'For Rice Blast (Pyricularia oryzae) management in Thanjavur district (Budalur block) during Kuruvai season: Apply Tricyclazole 75% WP @ 0.6 g/L water at first lesion appearance. Maintain 50 kg/ha Potash split dosing.',
           responseTextTamil:
-              'தஞ்சாவூர் குறுவை பருவத்தில் நெல் குலை நோயைக் கட்டுப்படுத்த, ட்ரைசைக்ளசோல் 75% WP மருந்தை 0.6 கிராம்/லிட்டர் தண்ணீரில் கலந்து தெளிக்கவும். நைட்ரஜன் உரத்தை மூன்று சம பங்குகளாகப் பிரித்து இடவும்.',
+              'தஞ்சாவூர் மாவட்டம் பூதலூர் வட்டார குறுவை நெல் குலை நோயைக் கட்டுப்படுத்த, ட்ரைசைக்ளசோல் 75% WP மருந்தை 0.6 கிராம்/லிட்டர் தண்ணீரில் கலந்து தெளிக்கவும்.',
+          recommendationSummary: 'Apply Tricyclazole 75% WP @ 0.6 g/L water with Potash topdressing.',
+          recommendationSummaryTamil: 'ட்ரைசைக்ளசோல் 75% WP மருந்தை 0.6 கிராம்/லிட்டர் தண்ணீரில் கலந்து தெளிக்கவும்.',
+          whatToDo: 'Foliar spray at first blast lesion appearance; split Nitrogen into 3 equal topdressings.',
+          whatToDoTamil: 'முதல் நோய் அறிகுறி கண்டவுடன் இலைத் தெளிப்பு செய்யவும்.',
+          whenToApply: 'Morning hours (7:00 AM - 10:00 AM) on dry foliage when humidity is >85%.',
+          whenToApplyTamil: 'காலை 7:00 - 10:00 மணிக்குள் இலை உலர்வாக இருக்கும்போது தெளிக்கவும்.',
+          howMuchAmount: '0.6 g/L water (500 g/ha Tricyclazole 75% WP) + 50 kg/ha MOP split fertilizer.',
+          howMuchAmountTamil: '0.6 கிராம்/லிட்டர் (ஹெக்டேருக்கு 500 கிராம்) + 50 கிலோ பொட்டாஷ்.',
+          whyReason: 'Cauvery Delta clay soils under Kuruvai high night humidity require systemic triazole activity to protect tillers.',
+          whyReasonTamil: 'டெல்டா களிமண் நிலங்களில் அதிக ஈரப்பதத்தில் ட்ரைசைக்ளசோல் 92.4% நோய் கட்டுப்பாடு அளிக்கிறது.',
+          groundingScore: 0.94,
+          ruleId: 'RULE-TNAU-BLAST-01',
+          citedProvenance: 'TNAU Crop Production Guide 2025 & ICAR-NRRI Advisory',
           language: language,
           isGrounded: true,
           status: ResponseStatus.grounded,
+          stateName: 'Tamil Nadu',
           districtName: 'Thanjavur',
+          blockName: 'Budalur',
+          blockNameTamil: 'பூதலூர்',
           cropName: 'Paddy / Rice (CR 1009 Sub 1)',
+          growthStage: 'Tillering Phase',
+          season: 'Kuruvai 2025',
           averageDataAgeDays: 14,
           timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
           evidenceSources: const [
@@ -179,19 +297,6 @@ class MockRagRepository implements RagRepository {
               urlOrRef: 'ICAR-NRRI-CAUVERY-DELTA-2025-04',
               isVerified: true,
             ),
-            EvidenceSource(
-              id: 'EVID-TRRI-03',
-              title: 'TRRI Aduthurai Regional Station Field Trial Summary',
-              publicationDate: '2025-06-02',
-              authorOrInstitute: 'Tamil Nadu Rice Research Institute, Aduthurai',
-              documentType: 'Station Field Trial Report',
-              excerpt: 'Soil analysis of Thanjavur district blocks shows high clay retention requiring neem-coated urea applications alongside fungicide sprays.',
-              excerptTamil: 'தஞ்சாவூர் வட்டார களிமண் பகுப்பாய்வு வேப்பம்பெண்ணெய் பூசிய யூரியாவை பரிந்துரைக்கிறது.',
-              confidenceScore: 0.89,
-              datasetAgeDays: 7,
-              urlOrRef: 'TRRI-ADT-REP-2025-KURUVAI',
-              isVerified: true,
-            ),
           ],
           clarificationQuestions: const [],
         );
@@ -203,48 +308,60 @@ class MockRagRepository implements RagRepository {
     await Future.delayed(const Duration(milliseconds: 200));
     return const [
       Region(
-        id: 'thanjavur_01',
+        id: 'thanjavur_budalur',
+        stateName: 'Tamil Nadu',
         districtName: 'Thanjavur',
         districtNameTamil: 'தஞ்சாவூர்',
-        stateName: 'Tamil Nadu',
+        blockName: 'Budalur',
+        blockNameTamil: 'பூதலூர்',
         agroClimaticZone: 'Cauvery Delta Zone',
         dominantSoilType: 'Alluvial & Deep Clay',
         primarySeason: 'Kuruvai & Samba',
         latitude: 10.7870,
         longitude: 79.1378,
+        hasActiveStationData: true,
       ),
       Region(
-        id: 'coimbatore_02',
+        id: 'coimbatore_thondamuthur',
+        stateName: 'Tamil Nadu',
         districtName: 'Coimbatore',
         districtNameTamil: 'கோயம்புத்தூர்',
-        stateName: 'Tamil Nadu',
+        blockName: 'Thondamuthur',
+        blockNameTamil: 'தொண்டாமுத்தூர்',
         agroClimaticZone: 'Western Zone',
         dominantSoilType: 'Black Cotton Soil (Vertisols)',
         primarySeason: 'Kharif & Rabi',
         latitude: 11.0168,
         longitude: 76.9558,
+        hasActiveStationData: true,
       ),
       Region(
-        id: 'ramanathapuram_03',
+        id: 'ramanathapuram_kadaladi',
+        stateName: 'Tamil Nadu',
         districtName: 'Ramanathapuram',
         districtNameTamil: 'ராமநாதபுரம்',
-        stateName: 'Tamil Nadu',
+        blockName: 'Kadaladi',
+        blockNameTamil: 'கடலாடி',
         agroClimaticZone: 'Coastal & Southern Dry Zone',
         dominantSoilType: 'Saline Coastal & Sandy Loam',
         primarySeason: 'Special Late Rabi / Dryland',
         latitude: 9.3639,
         longitude: 78.8395,
+        hasActiveStationData: false,
       ),
       Region(
-        id: 'madurai_04',
+        id: 'madurai_thiruparankundram',
+        stateName: 'Tamil Nadu',
         districtName: 'Madurai',
         districtNameTamil: 'மதுரை',
-        stateName: 'Tamil Nadu',
+        blockName: 'Thiruparankundram',
+        blockNameTamil: 'திருப்பரங்குன்றம்',
         agroClimaticZone: 'Southern Zone',
         dominantSoilType: 'Red Loam & Clay Loam',
         primarySeason: 'Chithirai & Samba',
         latitude: 9.9252,
         longitude: 78.1198,
+        hasActiveStationData: true,
       ),
     ];
   }
@@ -257,7 +374,7 @@ class MockRagRepository implements RagRepository {
     if (regionId.contains('coimbatore')) {
       return FieldSensorData(
         sensorId: 'SENS-CBE-09',
-        district: 'Coimbatore',
+        district: 'Coimbatore (Thondamuthur)',
         soilMoisturePct: 28.4,
         temperatureCelsius: 33.8,
         humidityPct: 62.0,
@@ -270,7 +387,7 @@ class MockRagRepository implements RagRepository {
     if (regionId.contains('ramanathapuram')) {
       return FieldSensorData(
         sensorId: 'SENS-RAM-12',
-        district: 'Ramanathapuram',
+        district: 'Ramanathapuram (Kadaladi)',
         soilMoisturePct: 18.2,
         temperatureCelsius: 35.1,
         humidityPct: 54.0,
@@ -282,7 +399,7 @@ class MockRagRepository implements RagRepository {
 
     return FieldSensorData(
       sensorId: 'SENS-THANJ-04',
-      district: 'Thanjavur',
+      district: 'Thanjavur (Budalur)',
       soilMoisturePct: 44.5,
       temperatureCelsius: 30.6,
       humidityPct: 82.0,
@@ -298,13 +415,20 @@ class MockRagRepository implements RagRepository {
     return LowBandwidthMessage(
       id: 'SMS-MSG-${DateTime.now().millisecondsSinceEpoch}',
       queryText: query.questionText,
-      payloadSizeKb: 1.14,
-      compressedSummary:
-          'TRICYCLAZOLE 75WP@0.6g/L for Rice Blast (Thanjavur/Kuruvai). Split N topdressing into 3 doses + 50kg K2O/ha. Ref: TNAU-CPG2025',
-      compressedSummaryTamil:
-          'குறுவை நெல் குலை நோய்: ட்ரைசைக்ளசோல் 75WP (0.6g/L) தெளிக்கவும். N உரத்தை 3 பங்காக இடவும். Ref: TNAU2025',
+      payloadSizeBytes: 1840, // 1.8 KB
+      maxConstraintBytes: 51200, // 50.0 KB engineering constraint
+      recommendation:
+          'SPRAY TRICYCLAZOLE 75WP @ 0.6g/L for Rice Blast (Thanjavur / Budalur / Kuruvai). Split N topdressing + 50kg MOP/ha.',
+      recommendationTamil:
+          'குறுவை நெல் குலை நோய் (பூதலூர்): ட்ரைசைக்ளசோல் 75WP (0.6g/L) தெளிக்கவும். N உரப் பிரிப்பு + 50kg பொட்டாஷ்.',
+      essentialReason:
+          'Cauvery Delta clay soils under >85% night humidity require triazole systemic protection.',
+      essentialReasonTamil:
+          'காவேரி டெல்டா களிமண் நிலங்களில் 85% இரவு ஈரப்பதத்தில் ட்ரைசைக்ளசோல் 92.4% பாதுகாப்பு அளிக்கிறது.',
+      citedSource: 'TNAU-CPG-2025/BULLETIN-408',
+      publicationDate: '2025-05-10',
+      dataAgeDays: 14,
       queueStatus: 'delivered',
-      retryCount: 0,
       timestamp: DateTime.now(),
     );
   }
@@ -317,7 +441,7 @@ class MockRagRepository implements RagRepository {
         id: 'FARM-001',
         name: 'M. Palanisamy',
         phone: '+91 98421 88321',
-        district: 'Thanjavur',
+        district: 'Thanjavur (Budalur block)',
         state: 'Tamil Nadu',
         preferredLanguage: 'ta',
         crops: ['Paddy', 'Blackgram'],
@@ -328,7 +452,7 @@ class MockRagRepository implements RagRepository {
         id: 'FARM-002',
         name: 'K. Arumugam',
         phone: '+91 97892 41105',
-        district: 'Coimbatore',
+        district: 'Coimbatore (Thondamuthur block)',
         state: 'Tamil Nadu',
         preferredLanguage: 'en',
         crops: ['Cotton', 'Maize'],
@@ -339,7 +463,7 @@ class MockRagRepository implements RagRepository {
         id: 'FARM-003',
         name: 'S. Ramanathan',
         phone: '+91 94431 09277',
-        district: 'Ramanathapuram',
+        district: 'Ramanathapuram (Kadaladi block)',
         state: 'Tamil Nadu',
         preferredLanguage: 'ta',
         crops: ['Groundnut', 'Chilli'],

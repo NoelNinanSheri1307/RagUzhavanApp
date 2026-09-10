@@ -23,7 +23,7 @@ class LowBandwidthScreen extends StatefulWidget {
 class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
   final RagRepository _repository = MockRagRepository();
   final _smsController = TextEditingController(
-    text: 'Rice blast fungicide Thanjavur Kuruvai clay soil',
+    text: 'Rice blast spray Budalur block Thanjavur Kuruvai paddy',
   );
   LowBandwidthMessage? _lastMessage;
   bool _isTransmitting = false;
@@ -33,6 +33,10 @@ class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
     final l10n = AppLocalizations.of(context);
     final localeNotifier = Provider.of<LocaleNotifier>(context);
     final isTamil = localeNotifier.languageCode == 'ta';
+
+    final payloadKb = _lastMessage?.payloadSizeKb ?? 1.8;
+    final maxKb = _lastMessage?.maxConstraintKb ?? 50.0;
+    final pctUsed = (payloadKb / maxKb).clamp(0.0, 1.0);
 
     return Scaffold(
       appBar: EditorialHeader(
@@ -48,38 +52,65 @@ class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FieldNotebookCard(
-                  title: 'COMPRESSED SMS PACKET ENGINE',
-                  subtitle: l10n.text('lowBandwidthSubheader'),
-                  tagText: '2G / SMS MODE',
-                  tagColor: AppColors.straw,
+                // 50 KB Engineering Constraint Metric Box
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevated,
+                    border: Border.all(color: AppColors.straw, width: 1.0),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Icon(Icons.signal_cellular_alt_1_bar, color: AppColors.warning, size: 20),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              isTamil ? 'அலைவரிசை நிலை: 2G / SMS வழி இயங்குகிறது' : 'Network Link: 2G / Edge SMS Gateway Active',
-                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.warning),
-                            ),
+                          Row(
+                            children: [
+                              const Icon(Icons.cell_tower, color: AppColors.straw, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.text('exchangeSize').toUpperCase(),
+                                style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.straw, letterSpacing: 0.8),
+                              ),
+                            ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.straw),
-                            ),
-                            child: const Text(
-                              'PAYLOAD: 1.1 KB',
-                              style: TextStyle(fontSize: 10.0, fontWeight: FontWeight.w700, color: AppColors.straw),
-                            ),
+                          Text(
+                            '${payloadKb.toStringAsFixed(1)} KB / ${maxKb.toStringAsFixed(1)} KB',
+                            style: const TextStyle(fontSize: 13.0, fontWeight: FontWeight.w800, fontFamily: 'monospace', color: AppColors.leaf),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
+                      // Progress Bar for 50 KB Limit
+                      Stack(
+                        children: [
+                          Container(height: 4, width: double.infinity, color: AppColors.surfaceHighlight),
+                          FractionallySizedBox(
+                            widthFactor: pctUsed,
+                            child: Container(height: 4, color: AppColors.leaf),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.text('constraintLimit'),
+                        style: const TextStyle(fontSize: 10.5, color: AppColors.foregroundSubtle),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
 
+                // SMS Form Card
+                FieldNotebookCard(
+                  title: '2G SMS PACKET GATEWAY SIMULATOR',
+                  subtitle: l10n.text('lowBandwidthSubheader'),
+                  tagText: 'SMS GATEWAY',
+                  tagColor: AppColors.straw,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
                         l10n.text('questionPlaceholder').toUpperCase(),
                         style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.foregroundSubtle),
@@ -104,7 +135,7 @@ class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
                                   children: [
                                     SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background)),
                                     SizedBox(width: 8),
-                                    Text('Compressing & Enqueuing SMS...'),
+                                    Text('Compressing to 1.8 KB payload...'),
                                   ],
                                 )
                               : Row(
@@ -122,58 +153,41 @@ class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
                 ),
                 const SizedBox(height: 20),
 
+                // SMS Thread View
                 if (_lastMessage != null) ...[
                   EditorialSlideUp(
                     child: FieldNotebookCard(
-                      title: 'TRANSMITTED SMS DIGEST',
-                      subtitle: 'ID: ${_lastMessage!.id}',
-                      tagText: 'SMS DELIVERED',
+                      title: 'RECEIVED SMS THREAD',
+                      subtitle: 'Packet ID: ${_lastMessage!.id}',
+                      tagText: 'SMS DELIVERED (1.8 KB)',
                       tagColor: AppColors.leaf,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          _buildSmsBubble(
+                            label: 'RECOMMENDATION',
+                            content: isTamil ? _lastMessage!.recommendationTamil : _lastMessage!.recommendation,
+                            color: AppColors.paper,
+                          ),
+                          const SizedBox(height: 10),
+                          _buildSmsBubble(
+                            label: l10n.text('essentialReason'),
+                            content: isTamil ? _lastMessage!.essentialReasonTamil : _lastMessage!.essentialReason,
+                            color: AppColors.straw,
+                          ),
+                          const SizedBox(height: 10),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${l10n.text('payloadSize')}: ${_lastMessage!.payloadSizeKb} KB',
-                                style: const TextStyle(fontSize: 11.0, color: AppColors.straw),
+                                'SOURCE: ${_lastMessage!.citedSource}',
+                                style: const TextStyle(fontSize: 10.5, fontFamily: 'monospace', color: AppColors.foregroundMuted),
                               ),
                               Text(
-                                '${l10n.text('queueStatus')}: ${_lastMessage!.queueStatus.toUpperCase()}',
-                                style: const TextStyle(fontSize: 11.0, fontWeight: FontWeight.w700, color: AppColors.leaf),
+                                'PUB: ${_lastMessage!.publicationDate} (${_lastMessage!.dataAgeDays}d old)',
+                                style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppColors.leaf),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          Container(
-                            padding: const EdgeInsets.all(12.0),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceHighlight,
-                              border: Border.all(color: AppColors.borderBright),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'COMPRESSED SMS RESPONSE:',
-                                  style: TextStyle(fontSize: 10.0, fontWeight: FontWeight.w700, color: AppColors.foregroundSubtle),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  isTamil && _lastMessage!.compressedSummaryTamil.isNotEmpty
-                                      ? _lastMessage!.compressedSummaryTamil
-                                      : _lastMessage!.compressedSummary,
-                                  style: const TextStyle(
-                                    fontFamily: 'monospace',
-                                    fontSize: 13.0,
-                                    color: AppColors.paper,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
-                            ),
                           ),
                         ],
                       ),
@@ -192,7 +206,7 @@ class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
                     children: [
                       _buildSpecItem(
                         title: '1. Binary Message Compression',
-                        desc: 'Queries are encoded with 8-bit district IDs and crop enums reducing packet overhead from 4.5 KB to 1.1 KB.',
+                        desc: 'Queries are encoded with 8-bit district IDs and crop enums reducing packet overhead from 4.5 KB to 1.8 KB.',
                       ),
                       const Divider(height: 16),
                       _buildSpecItem(
@@ -201,8 +215,8 @@ class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
                       ),
                       const Divider(height: 16),
                       _buildSpecItem(
-                        title: '3. Citation Hash References',
-                        desc: 'Full document citations are replaced with compact TNAU/ICAR registry hashes for offline verification.',
+                        title: '3. 50 KB Maximum Constraint',
+                        desc: 'Strict upper limit ensures compatibility with rural GSM SMS gateways and 2G EDGE cellular towers.',
                       ),
                     ],
                   ),
@@ -212,6 +226,30 @@ class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSmsBubble({required String label, required String content, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceHighlight,
+        border: Border(left: BorderSide(color: color, width: 2.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: AppColors.foregroundSubtle, letterSpacing: 0.8),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            content,
+            style: TextStyle(fontFamily: 'monospace', fontSize: 12.5, color: color, height: 1.4),
+          ),
+        ],
       ),
     );
   }
@@ -233,7 +271,7 @@ class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
       id: 'QUERY-SMS-${DateTime.now().millisecondsSinceEpoch}',
       questionText: _smsController.text,
       language: Provider.of<LocaleNotifier>(context, listen: false).languageCode,
-      regionId: 'thanjavur_01',
+      regionId: 'thanjavur_budalur',
       cropContext: const CropContext(
         cropName: 'Paddy',
         growthStage: 'Tillering',

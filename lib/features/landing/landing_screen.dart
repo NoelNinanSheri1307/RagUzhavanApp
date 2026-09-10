@@ -6,7 +6,9 @@ import '../../core/theme/app_theme.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/localization/locale_notifier.dart';
 import '../../shared/widgets/field_notebook_card.dart';
+import '../../shared/widgets/public_source_badge.dart';
 import '../../shared/animations/editorial_transitions.dart';
+import '../../shared/animations/spring_card_fan.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -15,6 +17,7 @@ class LandingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final localeNotifier = Provider.of<LocaleNotifier>(context);
+    final isTamil = localeNotifier.languageCode == 'ta';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -78,7 +81,7 @@ class LandingScreen extends StatelessWidget {
                             border: Border.all(color: AppColors.borderBright),
                           ),
                           child: Text(
-                            localeNotifier.languageCode == 'ta' ? 'EN' : 'தமிழ்',
+                            isTamil ? 'EN' : 'தமிழ்',
                             style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,
@@ -93,17 +96,17 @@ class LandingScreen extends StatelessWidget {
               ),
             ),
 
-            // Main scrollable content
+            // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20.0),
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 800),
+                    constraints: const BoxConstraints(maxWidth: 850),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
                         EditorialSlideUp(
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
@@ -112,7 +115,7 @@ class LandingScreen extends StatelessWidget {
                               border: Border.all(color: AppColors.field),
                             ),
                             child: Text(
-                              'CAUVERY DELTA & TAMIL NADU REGIONAL SCOPE'.toUpperCase(),
+                              'TAMIL NADU REGIONAL AGRICULTURAL INTELLIGENCE'.toUpperCase(),
                               style: const TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w700,
@@ -126,9 +129,9 @@ class LandingScreen extends StatelessWidget {
                         EditorialSlideUp(
                           delay: const Duration(milliseconds: 100),
                           child: Text(
-                            localeNotifier.languageCode == 'ta'
-                                ? 'மண்டலம் மற்றும் பருவம் சார்ந்த ஆதாரப்பூர்வ வேளாண் அறிவுத்திறன்'
-                                : 'Region-Aware & Season-Grounded Agricultural Intelligence',
+                            isTamil
+                                ? 'சிதறிய விவசாயத் தகவல்களைத் துல்லியமான ஆதாரப் பரிந்துரைகளாக இணைக்கிறது'
+                                : 'Connecting Fragmented Agricultural Evidence to Practical Farmer Decisions',
                             style: const TextStyle(
                               fontFamily: AppTheme.fontFootlight,
                               fontSize: 34.0,
@@ -141,9 +144,7 @@ class LandingScreen extends StatelessWidget {
                         EditorialSlideUp(
                           delay: const Duration(milliseconds: 200),
                           child: Text(
-                            localeNotifier.languageCode == 'ta'
-                                ? 'விவசாயிகள் தங்கள் மாவட்டம், மண் வகை மற்றும் பயிர் பருவத்திற்குரிய கேள்விகளை அமைத்து, பல்கலைக்கழக ஆராய்ச்சிகளிலிருந்து சரிபார்க்கப்பட்ட சான்றுகளுடன் துல்லியமான பதில்களைப் பெறலாம்.'
-                                : 'Helping farmers ask time-sensitive agricultural questions and receive answers strictly grounded in district crop advisories, verified research bulletins, dataset freshness metrics, and zero speculative hallucinations.',
+                            l10n.text('landingProblemSub'),
                             style: const TextStyle(
                               fontSize: 15.0,
                               height: 1.55,
@@ -151,40 +152,11 @@ class LandingScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
-
-                        // Action cards
-                        EditorialSlideUp(
-                          delay: const Duration(milliseconds: 300),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () => context.go('/farmer'),
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(l10n.text('askQuestion')),
-                                      const SizedBox(width: 8),
-                                      const Icon(Icons.arrow_forward, size: 16),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 36),
-                        const Divider(),
                         const SizedBox(height: 24),
 
-                        // 3 Architectural Highlights
+                        // Narrative Progression Steps
                         Text(
-                          'SYSTEM ARCHITECTURE & CORE CAPABILITIES',
+                          'PROBLEM TO SOLUTION NARRATIVE',
                           style: const TextStyle(
                             fontSize: 11.0,
                             fontWeight: FontWeight.w700,
@@ -192,79 +164,119 @@ class LandingScreen extends StatelessWidget {
                             letterSpacing: 1.2,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
                         LayoutBuilder(
                           builder: (context, constraints) {
-                            final isWide = constraints.maxWidth > 600;
+                            final isWide = constraints.maxWidth > 650;
                             return Flex(
                               direction: isWide ? Axis.horizontal : Axis.vertical,
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildFeatureBox(
-                                  title: '1. District Grounding',
-                                  description:
-                                      'Answers are retrieved exclusively for Thanjavur, Coimbatore, Ramanathapuram, and Madurai agro-climatic zones.',
-                                  isWide: isWide,
-                                ),
-                                if (isWide) const SizedBox(width: 14) else const SizedBox(height: 14),
-                                _buildFeatureBox(
-                                  title: '2. Publication Citations',
-                                  description:
-                                      'Every response lists publishing institutes (TNAU, ICAR, TRRI), release dates, confidence score, and record age in days.',
-                                  isWide: isWide,
-                                ),
-                                if (isWide) const SizedBox(width: 14) else const SizedBox(height: 14),
-                                _buildFeatureBox(
-                                  title: '3. Low Bandwidth SMS',
-                                  description:
-                                      'Built for 2G rural fields with 1.1 KB compressed packet summaries and offline sync queueing.',
-                                  isWide: isWide,
-                                ),
+                                _buildNarrativeStep(l10n.text('narrativeStep1'), 'Fragmented IMD, Mandi & Soil Cards', isWide),
+                                _buildArrow(isWide),
+                                _buildNarrativeStep(l10n.text('narrativeStep2'), 'State → District → Block Scope', isWide),
+                                _buildArrow(isWide),
+                                _buildNarrativeStep(l10n.text('narrativeStep3'), 'TNAU & ICAR Verified Bulletins', isWide),
+                                _buildArrow(isWide),
+                                _buildNarrativeStep(l10n.text('narrativeStep4'), 'Deterministic Spray & Irrigation Rules', isWide),
                               ],
                             );
                           },
                         ),
+                        const SizedBox(height: 30),
+
+                        // Action Launcher
+                        EditorialSlideUp(
+                          delay: const Duration(milliseconds: 300),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => context.go('/farmer'),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(l10n.text('askQuestion')),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.arrow_forward, size: 16),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 36),
+                        const Divider(),
+                        const SizedBox(height: 24),
+
+                        // Public Datasets Editorially Presented
+                        Text(
+                          l10n.text('publicSourcesTitle'),
+                          style: const TextStyle(
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.straw,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: const [
+                            PublicSourceBadge(sourceKey: 'IMD', title: 'India Meteorological Dept', category: 'Precipitation & Humidity Telemetry'),
+                            PublicSourceBadge(sourceKey: 'Agmarknet', title: 'Agricultural Marketing Net', category: 'Daily Commodity Mandi Prices'),
+                            PublicSourceBadge(sourceKey: 'Soil Health', title: 'Soil Health Card Portal', category: 'NPK & pH Field Micro-Nutrients'),
+                            PublicSourceBadge(sourceKey: 'data.gov.in', title: 'Open Government Data', category: 'District Crop Acreage & Yields'),
+                            PublicSourceBadge(sourceKey: 'State Dept', title: 'Tamil Nadu Agri Advisories', category: 'Weekly Pest Outbreak Alerts'),
+                            PublicSourceBadge(sourceKey: 'ICAR / SAU', title: 'TNAU Crop Calendars', category: 'Deterministic Extension Protocols'),
+                          ],
+                        ),
 
                         const SizedBox(height: 36),
 
-                        // Scenarios Try-Out Box
-                        FieldNotebookCard(
-                          title: 'Demo Mock Scenarios Inspector',
-                          subtitle: 'Simulate key hackathon grounding behaviors',
-                          tagText: 'RAG TESTBED',
-                          tagColor: AppColors.field,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Select a pre-built agricultural scenario to test evidence drawers, missing-context prompts, or data staleness banners:',
-                                style: TextStyle(fontSize: 13.0, color: AppColors.foregroundMuted),
-                              ),
-                              const SizedBox(height: 14),
-                              Wrap(
-                                spacing: 10,
-                                runSpacing: 10,
-                                children: [
-                                  OutlinedButton(
-                                    onPressed: () => context.go('/farmer/response?scenario=grounded'),
-                                    child: const Text('1. Grounded Response (Rice Blast)'),
-                                  ),
-                                  OutlinedButton(
-                                    onPressed: () => context.go('/farmer/response?scenario=clarification'),
-                                    child: const Text('2. Missing Context Prompt (Cotton)'),
-                                  ),
-                                  OutlinedButton(
-                                    onPressed: () => context.go('/farmer/response?scenario=no_data'),
-                                    child: const Text('3. No Current Data (Groundnut)'),
-                                  ),
-                                  OutlinedButton(
-                                    onPressed: () => context.go('/farmer/response?scenario=tamil_grounded'),
-                                    child: const Text('4. Tamil Grounded Response (தமிழ்)'),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        // Spring Physics Cards Inspector
+                        SpringCardFan(
+                          child: FieldNotebookCard(
+                            title: 'Mock Grounding Testbed & Scenarios',
+                            subtitle: 'Simulate deterministic rules, clarification prompts, and block staleness',
+                            tagText: 'PROTOTYPE TESTBED',
+                            tagColor: AppColors.field,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Test key architectural capabilities established in RagUzhavan:',
+                                  style: TextStyle(fontSize: 13.0, color: AppColors.foregroundMuted),
+                                ),
+                                const SizedBox(height: 14),
+                                Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children: [
+                                    OutlinedButton(
+                                      onPressed: () => context.go('/farmer/response?scenario=grounded'),
+                                      child: const Text('1. Grounded Paddy Advisory (Budalur Block)'),
+                                    ),
+                                    OutlinedButton(
+                                      onPressed: () => context.go('/farmer/response?scenario=clarification_location'),
+                                      child: const Text('2. Missing Location Clarification Prompt'),
+                                    ),
+                                    OutlinedButton(
+                                      onPressed: () => context.go('/farmer/response?scenario=no_data'),
+                                      child: const Text('3. No Current Data for Block (Kadaladi)'),
+                                    ),
+                                    OutlinedButton(
+                                      onPressed: () => context.go('/farmer/response?scenario=tamil_grounded'),
+                                      child: const Text('4. Tamil Advisory (தமிழ்)'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: 30),
@@ -280,13 +292,9 @@ class LandingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureBox({
-    required String title,
-    required String description,
-    required bool isWide,
-  }) {
+  Widget _buildNarrativeStep(String stepTitle, String sub, bool isWide) {
     final widget = Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.border),
@@ -295,29 +303,32 @@ class LandingScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
-            style: const TextStyle(
-              fontFamily: AppTheme.fontFootlight,
-              fontSize: 16.0,
-              color: AppColors.paper,
-            ),
+            stepTitle,
+            style: const TextStyle(fontSize: 12.0, fontWeight: FontWeight.w700, color: AppColors.straw),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
-            description,
-            style: const TextStyle(
-              fontSize: 12.5,
-              height: 1.45,
-              color: AppColors.foregroundMuted,
-            ),
+            sub,
+            style: const TextStyle(fontSize: 11.0, color: AppColors.foregroundMuted),
           ),
         ],
       ),
     );
 
+    if (isWide) return Expanded(child: widget);
+    return SizedBox(width: double.infinity, child: widget);
+  }
+
+  Widget _buildArrow(bool isWide) {
     if (isWide) {
-      return Expanded(child: widget);
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4.0),
+        child: Icon(Icons.arrow_forward, size: 14, color: AppColors.foregroundSubtle),
+      );
     }
-    return widget;
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.0),
+      child: Icon(Icons.arrow_downward, size: 14, color: AppColors.foregroundSubtle),
+    );
   }
 }

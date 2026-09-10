@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/localization/locale_notifier.dart';
 import '../../core/utils/date_formatter.dart';
@@ -12,6 +13,7 @@ import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
 import '../../shared/widgets/evidence_drawer.dart';
+import '../../shared/widgets/thin_grounding_indicator.dart';
 import '../../shared/animations/editorial_transitions.dart';
 
 class GroundedResponseScreen extends StatefulWidget {
@@ -68,7 +70,7 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
       appBar: EditorialHeader(
         title: l10n.text('responseHeader'),
         subtitle: _response != null
-            ? '${_response!.districtName} · ${_response!.cropName}'
+            ? '${_response!.stateName} · ${_response!.districtName} (${_response!.blockName} Block)'
             : 'Grounded Assessment',
         showBackButton: true,
         onBack: () => context.go('/farmer'),
@@ -93,53 +95,173 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Status Banner
                       EditorialSlideUp(
                         child: _buildStatusBanner(_response!, l10n, isTamil),
                       ),
                       const SizedBox(height: 16),
 
-                      EditorialSlideUp(
-                        delay: const Duration(milliseconds: 100),
-                        child: FieldNotebookCard(
-                          title: isTamil ? 'அறிவியல் வேளாண் வழிகாட்டுதல்' : 'AGRICULTURAL EXTENSION ADVISORY',
-                          subtitle: 'Anchored in official district research bulletins',
-                          tagText: _response!.status == ResponseStatus.grounded ? 'GROUNDED' : 'UNGROUNDED',
-                          tagColor: _response!.status == ResponseStatus.grounded
-                              ? AppColors.field
-                              : AppColors.warning,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isTamil && _response!.responseTextTamil.isNotEmpty
-                                    ? _response!.responseTextTamil
-                                    : _response!.responseText,
-                                style: const TextStyle(
-                                  fontSize: 15.5,
-                                  height: 1.6,
-                                  color: AppColors.foreground,
+                      // First Class NO DATA state
+                      if (_response!.status == ResponseStatus.noData) ...[
+                        EditorialSlideUp(
+                          child: Container(
+                            padding: const EdgeInsets.all(18.0),
+                            decoration: BoxDecoration(
+                              color: AppColors.errorBg,
+                              border: Border.all(color: AppColors.error, width: 1.0),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.block, color: AppColors.error, size: 22),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        l10n.text('statusNoData'),
+                                        style: const TextStyle(
+                                          fontSize: 13.0,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.error,
+                                          letterSpacing: 0.8,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    DateFormatter.formatTimestamp(_response!.timestamp, locale: localeNotifier.languageCode),
-                                    style: const TextStyle(fontSize: 11.0, color: AppColors.foregroundSubtle),
-                                  ),
-                                  Text(
-                                    DateFormatter.formatDataAge(_response!.averageDataAgeDays, locale: localeNotifier.languageCode),
-                                    style: const TextStyle(fontSize: 11.0, fontWeight: FontWeight.w600, color: AppColors.straw),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                const SizedBox(height: 10),
+                                Text(
+                                  l10n.text('noDataExplanation'),
+                                  style: const TextStyle(fontSize: 13.5, color: AppColors.paper, height: 1.5),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'SELECTED BLOCK: ${_response!.blockName.toUpperCase()} BLOCK',
+                                      style: const TextStyle(fontSize: 11.0, color: AppColors.foregroundMuted),
+                                    ),
+                                    Text(
+                                      DateFormatter.formatDataAge(_response!.averageDataAgeDays, locale: localeNotifier.languageCode),
+                                      style: const TextStyle(fontSize: 11.0, fontWeight: FontWeight.w700, color: AppColors.warning),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 20),
+                      ] else ...[
+                        // Thin Grounding Indicator Bar
+                        EditorialSlideUp(
+                          delay: const Duration(milliseconds: 50),
+                          child: ThinGroundingIndicator(
+                            score: _response!.groundingScore,
+                            label: l10n.text('secGrounding'),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
 
+                        // Structured Non-ChatGPT Response Grid
+                        EditorialSlideUp(
+                          delay: const Duration(milliseconds: 100),
+                          child: FieldNotebookCard(
+                            title: 'DETERMINISTIC AGRICULTURAL ADVISORY',
+                            subtitle: '${_response!.districtName} District · ${_response!.blockName} Block · ${_response!.cropName} (${_response!.growthStage})',
+                            tagText: 'RULE EVALUATED',
+                            tagColor: AppColors.field,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // RECOMMENDATION
+                                _buildStructuredSection(
+                                  label: l10n.text('secRecommendation'),
+                                  text: isTamil && _response!.recommendationSummaryTamil.isNotEmpty
+                                      ? _response!.recommendationSummaryTamil
+                                      : _response!.recommendationSummary,
+                                  color: AppColors.straw,
+                                  isHeadline: true,
+                                ),
+                                const Divider(height: 20),
+
+                                // WHAT TO DO
+                                _buildStructuredSection(
+                                  label: l10n.text('secWhatToDo'),
+                                  text: isTamil && _response!.whatToDoTamil.isNotEmpty
+                                      ? _response!.whatToDoTamil
+                                      : _response!.whatToDo,
+                                  color: AppColors.paper,
+                                ),
+                                const Divider(height: 20),
+
+                                // WHEN & HOW MUCH
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: _buildStructuredSection(
+                                        label: l10n.text('secWhen'),
+                                        text: isTamil && _response!.whenToApplyTamil.isNotEmpty
+                                            ? _response!.whenToApplyTamil
+                                            : _response!.whenToApply,
+                                        color: AppColors.leaf,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: _buildStructuredSection(
+                                        label: l10n.text('secHowMuch'),
+                                        text: isTamil && _response!.howMuchAmountTamil.isNotEmpty
+                                            ? _response!.howMuchAmountTamil
+                                            : _response!.howMuchAmount,
+                                        color: AppColors.straw,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const Divider(height: 20),
+
+                                // WHY RATIONALE
+                                _buildStructuredSection(
+                                  label: l10n.text('secWhy'),
+                                  text: isTamil && _response!.whyReasonTamil.isNotEmpty
+                                      ? _response!.whyReasonTamil
+                                      : _response!.whyReason,
+                                  color: AppColors.foregroundMuted,
+                                ),
+                                const SizedBox(height: 16),
+
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceHighlight,
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'RULE PROVENANCE: ${_response!.ruleId}',
+                                        style: const TextStyle(fontSize: 10.0, fontFamily: 'monospace', color: AppColors.straw),
+                                      ),
+                                      Text(
+                                        DateFormatter.formatDataAge(_response!.averageDataAgeDays, locale: localeNotifier.languageCode),
+                                        style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppColors.leaf),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Clarification Form if needed
                       if (_response!.status == ResponseStatus.clarificationNeeded) ...[
                         EditorialSlideUp(
                           delay: const Duration(milliseconds: 200),
@@ -148,6 +270,7 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                         const SizedBox(height: 16),
                       ],
 
+                      // Evidence Drawer & Citations Panel
                       EditorialSlideUp(
                         delay: const Duration(milliseconds: 300),
                         child: EvidenceDrawer(
@@ -157,6 +280,7 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                       ),
                       const SizedBox(height: 24),
 
+                      // Test Scenarios Switcher
                       Container(
                         padding: const EdgeInsets.all(14.0),
                         decoration: BoxDecoration(
@@ -167,7 +291,7 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'SWITCH MOCK TEST SCENARIO',
+                              'TESTBED SCENARIO LAUNCHER',
                               style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.straw, letterSpacing: 0.8),
                             ),
                             const SizedBox(height: 10),
@@ -175,9 +299,9 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                               spacing: 8,
                               runSpacing: 8,
                               children: [
-                                _buildScenarioChip('grounded', 'Grounded (Paddy)', widget.scenarioKey == 'grounded'),
-                                _buildScenarioChip('clarification', 'Clarification (Cotton)', widget.scenarioKey == 'clarification'),
-                                _buildScenarioChip('no_data', 'No Data (Groundnut)', widget.scenarioKey == 'no_data'),
+                                _buildScenarioChip('grounded', 'Grounded Paddy (Budalur)', widget.scenarioKey == 'grounded'),
+                                _buildScenarioChip('clarification_location', 'Missing Location Clarification', widget.scenarioKey == 'clarification_location'),
+                                _buildScenarioChip('no_data', 'No Data for Block (Kadaladi)', widget.scenarioKey == 'no_data'),
                                 _buildScenarioChip('tamil_grounded', 'Tamil Advisory (தமிழ்)', widget.scenarioKey == 'tamil_grounded'),
                               ],
                             ),
@@ -190,6 +314,38 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildStructuredSection({
+    required String label,
+    required String text,
+    required Color color,
+    bool isHeadline = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 10.0,
+            fontWeight: FontWeight.w700,
+            color: AppColors.foregroundSubtle,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          text,
+          style: TextStyle(
+            fontFamily: isHeadline ? AppTheme.fontFootlight : null,
+            fontSize: isHeadline ? 18.0 : 13.5,
+            color: color,
+            height: isHeadline ? 1.25 : 1.45,
+          ),
+        ),
+      ],
     );
   }
 
@@ -239,7 +395,7 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
             ),
           ),
           Text(
-            '${res.districtName} (${res.cropName})',
+            '${res.districtName} (${res.blockName} Block)',
             style: const TextStyle(fontSize: 11.0, color: AppColors.foregroundMuted),
           ),
         ],
@@ -249,8 +405,8 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
 
   Widget _buildClarificationCard(RagResponse res, AppLocalizations l10n, bool isTamil) {
     return FieldNotebookCard(
-      title: isTamil ? 'கூடுதல் விவரங்களை அளிக்கவும்' : 'FIELD CONTEXT CLARIFICATION',
-      subtitle: l10n.text('clarificationPrompt'),
+      title: l10n.text('clarificationNeededHeader'),
+      subtitle: l10n.text('missingContextPrompt'),
       tagText: 'ACTION REQUIRED',
       tagColor: AppColors.warning,
       child: Column(
@@ -309,18 +465,35 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                   if (mounted) {
                     setState(() {
                       _response = RagResponse(
-                        id: 'RESP-CLARIFIED-02',
+                        id: 'RESP-CLARIFIED-SUCCESS',
                         queryId: res.queryId,
                         responseText:
-                            'Grounded Cotton Bollworm Protocol for Coimbatore (Well-drained Vertisols): Spray Chlorantraniliprole 18.5 SC @ 0.3 ml/L water. Deploy 5 pheromone traps per acre. Ref: CICR-BULLETIN-2025/COTTON-BOLLWORM',
+                            'Grounded Advisory for Thanjavur (Budalur block): Spray Tricyclazole 75% WP @ 0.6 g/L water. Maintain 50 kg/ha Potash split dosing.',
                         responseTextTamil:
-                            'கோயம்புத்தூர் கரிசல் மண் நிலத்திற்கான பருத்தி காய் புழு மேலாண்மை: குளோரான்ட்ரினிலிப்ரோல் 18.5 SC (0.3 மி.லி/லிட்டர்) தெளிக்கவும். ஏக்கருக்கு 5 இனக்கவர்ச்சி பொறிகளை வைக்கவும்.',
+                            'தஞ்சாவூர் பூதலூர் வட்டாரத்திற்குரிய ஆவணப் பரிந்துரை: ட்ரைசைக்ளசோல் 75% WP (0.6 கிராம்/லிட்டர்) தெளிக்கவும்.',
+                        recommendationSummary: 'Tricyclazole 75% WP @ 0.6 g/L spray with Potash topdressing.',
+                        recommendationSummaryTamil: 'ட்ரைசைக்ளசோல் 75% WP (0.6 கிராம்/லிட்டர்) தெளிப்பு.',
+                        whatToDo: 'Apply foliar spray at first blast lesion appearance.',
+                        whatToDoTamil: 'முதல் நோய் அறிகுறி கண்டவுடன் தெளிக்கவும்.',
+                        whenToApply: 'Morning hours (7:00 AM - 10:00 AM) on dry foliage.',
+                        whenToApplyTamil: 'காலை 7:00 - 10:00 மணிக்குள் இலை உலர்வாக இருக்கும்போது.',
+                        howMuchAmount: '0.6 g/L water (500 g/ha) + 50 kg/ha MOP.',
+                        howMuchAmountTamil: '0.6 கிராம்/லிட்டர் + 50 கிலோ பொட்டாஷ்.',
+                        whyReason: 'Cauvery Delta clay soils under high humidity require triazole systemic protection.',
+                        whyReasonTamil: 'காவேரி டெல்டா நிலங்களில் ட்ரைசைக்ளசோல் 92.4% பாதுகாப்பு அளிக்கிறது.',
+                        groundingScore: 0.94,
+                        ruleId: 'RULE-TNAU-BLAST-01',
+                        citedProvenance: 'TNAU Crop Production Guide 2025',
                         language: res.language,
                         isGrounded: true,
                         status: ResponseStatus.grounded,
-                        districtName: res.districtName,
-                        cropName: res.cropName,
-                        averageDataAgeDays: 5,
+                        stateName: 'Tamil Nadu',
+                        districtName: 'Thanjavur',
+                        blockName: 'Budalur',
+                        cropName: 'Paddy / Rice',
+                        growthStage: 'Tillering Phase',
+                        season: 'Kuruvai 2025',
+                        averageDataAgeDays: 14,
                         timestamp: DateTime.now(),
                         evidenceSources: const [],
                         clarificationQuestions: const [],

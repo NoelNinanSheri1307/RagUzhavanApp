@@ -34,7 +34,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
   }
 
   Future<void> _loadTelemetry() async {
-    final data = await _repository.fetchFieldSensorData('thanjavur_01');
+    final data = await _repository.fetchFieldSensorData('thanjavur_budalur');
     if (mounted) {
       setState(() {
         _sensorData = data;
@@ -49,13 +49,12 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     final localeNotifier = Provider.of<LocaleNotifier>(context);
     final authService = Provider.of<AuthService>(context);
     final farmer = authService.currentFarmer;
-
     final isTamil = localeNotifier.languageCode == 'ta';
 
     return Scaffold(
       appBar: EditorialHeader(
         title: isTamil ? 'விவசாயி அறிக்கை பலகை' : 'Farmer Intelligence Dashboard',
-        subtitle: '${farmer?.district ?? "Thanjavur"} · ${farmer?.agroZone ?? "Cauvery Delta Zone"}',
+        subtitle: '${farmer?.district ?? "Thanjavur"} · Budalur Block · ${farmer?.agroZone ?? "Cauvery Delta Zone"}',
       ),
       bottomNavigationBar: const EditorialNavBar(currentPath: '/farmer'),
       body: SingleChildScrollView(
@@ -66,13 +65,13 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Active District Context Banner
+                // Active District & Block Scope Banner
                 EditorialFadeIn(
                   child: FieldNotebookCard(
-                    title: farmer != null ? 'FARMER RECORD: ${farmer.name.toUpperCase()}' : 'ACTIVE DISTRICT SCOPE',
+                    title: farmer != null ? 'FARMER PROFILE: ${farmer.name.toUpperCase()}' : 'ACTIVE FIELD SCOPE',
                     subtitle: isTamil
-                        ? 'மாவட்ட நிர்வாக வரம்பு: ${farmer?.district ?? "தஞ்சாவூர்"} | முதன்மைப் பயிர்: நெல்'
-                        : 'District Jurisdiction: ${farmer?.district ?? "Thanjavur"} | Crop: Paddy (Kuruvai)',
+                        ? 'மாநிலம்: தமிழ்நாடு | மாவட்டம்: தஞ்சாவூர் | வட்டாரம்: பூதலூர்'
+                        : 'State: Tamil Nadu | District: Thanjavur | Block: Budalur',
                     tagText: 'LIVE FIELD SCOPE',
                     tagColor: AppColors.field,
                     trailing: TextButton(
@@ -85,12 +84,12 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
                             _buildContextTag(isTamil ? 'மண்: வண்டல் & களிமண்' : 'Soil: Alluvial Clay'),
-                            const SizedBox(width: 8),
                             _buildContextTag(isTamil ? 'பருவம்: குறுவை 2025' : 'Season: Kuruvai 2025'),
-                            const SizedBox(width: 8),
                             _buildContextTag(isTamil ? 'நிலம்: ${farmer?.landSizeAcres ?? 4.5} ஏக்கர்' : 'Land: ${farmer?.landSizeAcres ?? 4.5} Acres'),
                           ],
                         ),
@@ -100,17 +99,17 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Scientific Sensor Telemetry Readout
+                // Telemetry
                 if (_isLoading || _sensorData == null)
                   Container(
-                    height: 90,
+                    height: 80,
                     alignment: Alignment.center,
                     color: AppColors.surface,
                     child: Text(l10n.text('loading'), style: const TextStyle(color: AppColors.foregroundMuted)),
                   )
                 else
                   EditorialSlideUp(
-                    delay: const Duration(milliseconds: 150),
+                    delay: const Duration(milliseconds: 100),
                     child: ScientificTelemetryBar(
                       sensorData: _sensorData!,
                       currentLocale: localeNotifier.languageCode,
@@ -118,38 +117,50 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                   ),
                 const SizedBox(height: 20),
 
-                // Primary Query Action Hero Box
+                // Primary Question Section: "What can I ask RagUzhavan?"
                 EditorialSlideUp(
-                  delay: const Duration(milliseconds: 250),
-                  child: Container(
-                    padding: const EdgeInsets.all(18.0),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceHighlight,
-                      border: Border.all(color: AppColors.straw, width: 1.0),
-                    ),
+                  delay: const Duration(milliseconds: 200),
+                  child: FieldNotebookCard(
+                    title: l10n.text('whatCanIAskTitle'),
+                    subtitle: 'Select an agricultural query category anchored in official regional datasets',
+                    tagText: 'QUERY SYSTEM',
+                    tagColor: AppColors.straw,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.help_outline, color: AppColors.straw, size: 22),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                l10n.text('askHeader'),
-                                style: const TextStyle(
-                                  fontFamily: AppTheme.fontFootlight,
-                                  fontSize: 20.0,
-                                  color: AppColors.foreground,
-                                ),
-                              ),
-                            ),
-                          ],
+                        _buildAskCategoryTile(
+                          category: l10n.text('askCategoryIrrigation'),
+                          question: l10n.text('sampleIrrigation'),
+                          icon: Icons.water_drop_outlined,
+                          onTap: () => context.go('/farmer/ask'),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.text('askSubheader'),
-                          style: const TextStyle(fontSize: 13.0, color: AppColors.foregroundMuted, height: 1.45),
+                        const Divider(height: 16),
+                        _buildAskCategoryTile(
+                          category: l10n.text('askCategorySowing'),
+                          question: l10n.text('sampleSowing'),
+                          icon: Icons.calendar_today_outlined,
+                          onTap: () => context.go('/farmer/ask'),
+                        ),
+                        const Divider(height: 16),
+                        _buildAskCategoryTile(
+                          category: l10n.text('askCategoryAttention'),
+                          question: l10n.text('sampleAttention'),
+                          icon: Icons.warning_amber_outlined,
+                          onTap: () => context.go('/farmer/ask'),
+                        ),
+                        const Divider(height: 16),
+                        _buildAskCategoryTile(
+                          category: l10n.text('askCategoryAdvisory'),
+                          question: l10n.text('sampleAdvisory'),
+                          icon: Icons.article_outlined,
+                          onTap: () => context.go('/farmer/ask'),
+                        ),
+                        const Divider(height: 16),
+                        _buildAskCategoryTile(
+                          category: l10n.text('askCategoryMandi'),
+                          question: l10n.text('sampleMandi'),
+                          icon: Icons.storefront_outlined,
+                          onTap: () => context.go('/farmer/ask'),
                         ),
                         const SizedBox(height: 16),
                         SizedBox(
@@ -161,7 +172,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                               children: [
                                 Text(l10n.text('askQuestion')),
                                 const SizedBox(width: 8),
-                                const Icon(Icons.send_outlined, size: 16),
+                                const Icon(Icons.arrow_forward, size: 16),
                               ],
                             ),
                           ),
@@ -172,7 +183,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Grounding Scenarios Test Matrix
+                // Grounded Evaluation Scenarios
                 Text(
                   isTamil ? 'ஆதாரப்பூர்வ மேலாண்மை காட்சிகள்' : 'GROUNDED AGRICULTURAL EVALUATIONS',
                   style: const TextStyle(
@@ -186,8 +197,8 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
 
                 _buildScenarioRow(
                   context: context,
-                  title: isTamil ? 'நெல் குலை நோய் மேலாண்மை' : 'Rice Blast Fungicide Protocol',
-                  district: 'Thanjavur · Paddy',
+                  title: isTamil ? 'நெல் குலை நோய் மேலாண்மை (பூதலூர்)' : 'Rice Blast Fungicide Protocol (Budalur Block)',
+                  district: 'Thanjavur · Budalur · Samba Paddy',
                   badge: 'Grounded Evidence (3 Citations)',
                   badgeColor: AppColors.field,
                   scenarioKey: 'grounded',
@@ -196,19 +207,19 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
 
                 _buildScenarioRow(
                   context: context,
-                  title: isTamil ? 'பருத்தி காய் புழு - வடிகால் விவரம் தேவை' : 'Cotton Bollworm - Drainage Clarification',
-                  district: 'Coimbatore · Cotton',
-                  badge: 'Missing Context Prompt',
+                  title: isTamil ? 'இடம் குறிப்பிடப்படாத கேள்வி (கேள்வி தெளிவு)' : 'Unspecified Field Location (Clarification Flow)',
+                  district: 'District & Block missing',
+                  badge: 'Location Clarification Needed',
                   badgeColor: AppColors.warning,
-                  scenarioKey: 'clarification',
+                  scenarioKey: 'clarification_location',
                 ),
                 const SizedBox(height: 10),
 
                 _buildScenarioRow(
                   context: context,
-                  title: isTamil ? 'நிலக்கடலை அசுவினி தாக்குதல் (பழைய தரவு)' : 'Groundnut Dryland Pest - Data Staleness',
-                  district: 'Ramanathapuram · Groundnut',
-                  badge: 'No Current Data (>180 Days)',
+                  title: isTamil ? 'கடலாடி வட்டாரம் - தற்போதைய தரவு இல்லை' : 'No Current Data for Block (Kadaladi Block)',
+                  district: 'Ramanathapuram · Kadaladi · Groundnut',
+                  badge: 'No Data for Block (>194 Days)',
                   badgeColor: AppColors.error,
                   scenarioKey: 'no_data',
                 ),
@@ -217,7 +228,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                 _buildScenarioRow(
                   context: context,
                   title: isTamil ? 'தமிழ் ஆவண சான்று மேலாண்மை' : 'Tamil Native Grounded Advisory',
-                  district: 'தஞ்சாவூர் · நெல்',
+                  district: 'தஞ்சாவூர் · பூதலூர் · நெல்',
                   badge: 'தமிழ் ஆவணம் (TNAU 2025)',
                   badgeColor: AppColors.leaf,
                   scenarioKey: 'tamil_grounded',
@@ -241,6 +252,52 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
       child: Text(
         text,
         style: const TextStyle(fontSize: 11.0, color: AppColors.paper),
+      ),
+    );
+  }
+
+  Widget _buildAskCategoryTile({
+    required String category,
+    required String question,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.straw, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 10.0,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.leaf,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '"$question"',
+                    style: const TextStyle(
+                      fontSize: 13.0,
+                      color: AppColors.paper,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.foregroundSubtle),
+          ],
+        ),
       ),
     );
   }

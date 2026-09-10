@@ -12,7 +12,6 @@ import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
 import '../../shared/widgets/scientific_telemetry_bar.dart';
-import '../../shared/animations/editorial_transitions.dart';
 
 class RegionSelectorScreen extends StatefulWidget {
   const RegionSelectorScreen({super.key});
@@ -83,8 +82,31 @@ class _RegionSelectorScreenState extends State<RegionSelectorScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Container(
+                        padding: const EdgeInsets.all(14.0),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceHighlight,
+                          border: Border.all(color: AppColors.straw, width: 1.0),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.explore_outlined, color: AppColors.straw, size: 22),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                isTamil
+                                    ? 'எல்லைத் தேர்வு: தேர்ந்தெடுக்கப்பட்ட மாவட்டம் மற்றும் வட்டாரம் மட்டுமே ஆதார ஆவணப் பெறுகையைத் தீர்மானிக்கிறது.'
+                                    : 'EVIDENCE BOUNDARY: Region selection strictly bounds which university extension bulletins and weather records can be retrieved.',
+                                style: const TextStyle(fontSize: 12.0, color: AppColors.paper, height: 1.35),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
                       Text(
-                        isTamil ? 'தமிழ்நாடு மாவட்ட வேளாண் அதிகார எல்லைகள்' : 'TAMIL NADU DISTRICT JURISDICTIONS',
+                        l10n.text('regionHeader').toUpperCase(),
                         style: const TextStyle(
                           fontSize: 11.0,
                           fontWeight: FontWeight.w700,
@@ -94,70 +116,89 @@ class _RegionSelectorScreenState extends State<RegionSelectorScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: _regions.map((reg) {
-                            final isSelected = _selectedRegion?.id == reg.id;
-                            final name = isTamil ? reg.districtNameTamil : reg.districtName;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 10.0),
-                              child: ChoiceChip(
-                                label: Text(name),
-                                selected: isSelected,
-                                onSelected: (_) => _selectRegion(reg),
-                                selectedColor: AppColors.straw,
-                                backgroundColor: AppColors.surface,
-                                labelStyle: TextStyle(
-                                  fontSize: 13.0,
-                                  color: isSelected ? AppColors.background : AppColors.paper,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _regions.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final reg = _regions[index];
+                          final isSelected = _selectedRegion?.id == reg.id;
+                          final distName = isTamil ? reg.districtNameTamil : reg.districtName;
+                          final blockName = isTamil ? reg.blockNameTamil : reg.blockName;
+
+                          return FieldNotebookCard(
+                            onTap: () => _selectRegion(reg),
+                            padding: const EdgeInsets.all(14.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                                      color: isSelected ? AppColors.straw : AppColors.foregroundSubtle,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'STATE: ${reg.stateName.toUpperCase()} · DISTRICT: ${distName.toUpperCase()}',
+                                            style: const TextStyle(
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.leaf,
+                                              letterSpacing: 0.8,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'BLOCK: ${blockName.toUpperCase()} BLOCK',
+                                            style: const TextStyle(
+                                              fontFamily: 'FootlightMTLight',
+                                              fontSize: 17.0,
+                                              color: AppColors.foreground,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                                      decoration: BoxDecoration(
+                                        color: reg.hasActiveStationData ? AppColors.successBg : AppColors.errorBg,
+                                        border: Border.all(color: reg.hasActiveStationData ? AppColors.field : AppColors.error),
+                                      ),
+                                      child: Text(
+                                        reg.hasActiveStationData ? 'ACTIVE DATA' : 'NO CURRENT DATA',
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: reg.hasActiveStationData ? AppColors.leaf : AppColors.error,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                                side: const BorderSide(color: AppColors.borderBright),
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                                if (isSelected) ...[
+                                  const Divider(height: 16),
+                                  _buildDetailRow(label: l10n.text('agroZone'), value: reg.agroClimaticZone),
+                                  const SizedBox(height: 4),
+                                  _buildDetailRow(label: l10n.text('soilType'), value: reg.dominantSoilType),
+                                  const SizedBox(height: 4),
+                                  _buildDetailRow(label: l10n.text('primarySeason'), value: reg.primarySeason),
+                                ],
+                              ],
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 20),
 
                       if (_selectedRegion != null) ...[
-                        EditorialFadeIn(
-                          key: ValueKey(_selectedRegion!.id),
-                          child: FieldNotebookCard(
-                            title: '${_selectedRegion!.districtName.toUpperCase()} DISTRICT',
-                            subtitle: _selectedRegion!.agroClimaticZone,
-                            tagText: 'AGRO SCOPE',
-                            tagColor: AppColors.leaf,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildDetailRow(
-                                  label: l10n.text('agroZone'),
-                                  value: _selectedRegion!.agroClimaticZone,
-                                ),
-                                const Divider(height: 16),
-                                _buildDetailRow(
-                                  label: l10n.text('soilType'),
-                                  value: _selectedRegion!.dominantSoilType,
-                                ),
-                                const Divider(height: 16),
-                                _buildDetailRow(
-                                  label: l10n.text('primarySeason'),
-                                  value: _selectedRegion!.primarySeason,
-                                ),
-                                const Divider(height: 16),
-                                _buildDetailRow(
-                                  label: 'GEO COORDINATES',
-                                  value: '${_selectedRegion!.latitude}° N, ${_selectedRegion!.longitude}° E',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
                         if (_sensorData != null)
                           ScientificTelemetryBar(
                             sensorData: _sensorData!,
@@ -165,39 +206,21 @@ class _RegionSelectorScreenState extends State<RegionSelectorScreen> {
                           ),
                         const SizedBox(height: 20),
 
-                        FieldNotebookCard(
-                          title: l10n.text('activeAlerts'),
-                          subtitle: 'Real-time meteorological & pest monitoring alerts',
-                          tagText: 'AGRO ALERTS',
-                          tagColor: AppColors.warning,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildAlertItem(
-                                title: isTamil ? 'குறுவை பருவ மழைப்பொழிவு எச்சரிக்கை' : 'Cauvery Delta Canal Flow Advisory',
-                                detail: isTamil
-                                    ? 'காவேரி மேலணையிலிருந்து தண்ணீர் திறப்பு அதிகரிக்கப்பட்டுள்ளது. வடிகால் வாய்க்கால்களை தூர்வாரவும்.'
-                                    : 'Mettur reservoir release maintained at 12,000 cusecs. Clear field drainage channels.',
-                                date: 'Updated 2 hours ago',
-                              ),
-                              const Divider(height: 20),
-                              _buildAlertItem(
-                                title: isTamil ? 'இலை சுருட்டுப் புழு கவனிப்பு எச்சரிக்கை' : 'Leaf Folder Pest Monitoring',
-                                detail: isTamil
-                                    ? 'இரவு நேர அதிக ஈரப்பதம் காரணமாக இலை சுருட்டுப் புழு தாக்குதல் சாத்தியம்.'
-                                    : 'High ambient humidity (>82%) elevates leaf folder vulnerability in late tillering stage.',
-                                date: 'Updated 1 day ago',
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () => context.go('/farmer/ask'),
-                            child: Text(isTamil ? 'இந்த மாவட்டத்திற்கான கேள்வி கேட்க' : 'Formulate Query for ${_selectedRegion!.districtName}'),
+                            onPressed: () {
+                              if (!_selectedRegion!.hasActiveStationData) {
+                                context.go('/farmer/response?scenario=no_data');
+                              } else {
+                                context.go('/farmer/ask');
+                              }
+                            },
+                            child: Text(
+                              isTamil
+                                  ? 'இந்த வட்டாரத்திற்கான கேள்வியைச் சமர்ப்பிக்க'
+                                  : 'Formulate Query for ${_selectedRegion!.districtName} (${_selectedRegion!.blockName} Block)',
+                            ),
                           ),
                         ),
                         const SizedBox(height: 30),
@@ -216,44 +239,14 @@ class _RegionSelectorScreenState extends State<RegionSelectorScreen> {
       children: [
         Text(
           label.toUpperCase(),
-          style: const TextStyle(fontSize: 11.0, fontWeight: FontWeight.w600, color: AppColors.foregroundSubtle),
+          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppColors.foregroundSubtle),
         ),
         Flexible(
           child: Text(
             value,
-            style: const TextStyle(fontSize: 13.0, fontWeight: FontWeight.w600, color: AppColors.paper),
+            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.paper),
             textAlign: TextAlign.end,
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAlertItem({required String title, required String detail, required String date}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 16),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.foreground),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          detail,
-          style: const TextStyle(fontSize: 12.5, color: AppColors.foregroundMuted, height: 1.4),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          date,
-          style: const TextStyle(fontSize: 10.5, color: AppColors.foregroundSubtle),
         ),
       ],
     );

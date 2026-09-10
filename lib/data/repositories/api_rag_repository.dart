@@ -84,7 +84,7 @@ class ApiRagRepository implements RagRepository {
       final queryPayload = <String, dynamic>{
         'question': question,
         'mode': mode,
-        if (sensors != null) 'sensors': sensors,
+        if (sensors != null) 'sensors': sensors!,
       };
 
       final res = await apiService.askSession(sessionId, queryPayload) ??

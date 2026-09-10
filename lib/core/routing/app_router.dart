@@ -7,8 +7,6 @@ import '../../features/auth/register_screen.dart';
 import '../../features/farmer/farmer_dashboard_screen.dart';
 import '../../features/farmer/ask_question_screen.dart';
 import '../../features/farmer/grounded_response_screen.dart';
-import '../../features/farmer/region_selector_screen.dart';
-import '../../features/farmer/low_bandwidth_screen.dart';
 import '../../features/farmer/settings_screen.dart';
 import '../../features/admin/admin_dashboard_screen.dart';
 import '../../features/admin/admin_farmers_screen.dart';
@@ -79,14 +77,6 @@ class AppRouter {
                 final sessionId = int.tryParse(sessionIdStr ?? '');
                 return GroundedResponseScreen(sessionId: sessionId);
               },
-            ),
-            GoRoute(
-              path: 'region',
-              builder: (context, state) => const RegionSelectorScreen(),
-            ),
-            GoRoute(
-              path: 'low-bandwidth',
-              builder: (context, state) => const LowBandwidthScreen(),
             ),
             GoRoute(
               path: 'settings',

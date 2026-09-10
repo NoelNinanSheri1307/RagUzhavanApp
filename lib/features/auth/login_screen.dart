@@ -15,19 +15,72 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController(text: '+91 98421 88321');
-  final _pinController = TextEditingController(text: '1234');
+  final _usernameController = TextEditingController(text: 'farmer1');
+  final _passwordController = TextEditingController(text: 'password123');
   UserRole _selectedRole = UserRole.farmer;
+  bool _isSubmitting = false;
+  String? _errorMessage;
+
+  Future<void> _handleLogin() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      setState(() => _errorMessage = 'Please enter username and password');
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    try {
+      final success = await authService.login(
+        username: username,
+        password: password,
+        role: _selectedRole,
+      );
+
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        if (success) {
+          if (_selectedRole == UserRole.admin) {
+            context.go('/admin');
+          } else {
+            context.go('/farmer');
+          }
+        } else {
+          setState(() => _errorMessage = 'Invalid username or password');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _errorMessage = e.toString().replaceAll('ApiException: ', '');
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final authService = Provider.of<AuthService>(context, listen: false);
 
     return Scaffold(
       appBar: EditorialHeader(
         title: l10n.text('loginHeader'),
         showBackButton: true,
+        onBack: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/landing');
+          }
+        },
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -70,15 +123,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 FieldNotebookCard(
-                  title: 'PORTAL AUTHENTICATION',
-                  subtitle: 'Select access mode for frontend state simulation',
-                  tagText: 'MOCK ACCESS',
+                  title: 'PORTAL AUTHENTICATION (POST /token)',
+                  subtitle: 'Sign in to access your agricultural RAG sessions and advisory',
+                  tagText: 'OAUTH2 AUTH',
                   tagColor: AppColors.straw,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'ACCESS LEVEL',
+                        'ACCESS ROLE',
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
@@ -140,9 +193,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      Text(
-                        l10n.text('usernamePlaceholder').toUpperCase(),
-                        style: const TextStyle(
+                      const Text(
+                        'USERNAME OR PHONE',
+                        style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
                           color: AppColors.foregroundSubtle,
@@ -151,17 +204,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 6),
                       TextField(
-                        controller: _phoneController,
+                        controller: _usernameController,
                         style: const TextStyle(color: AppColors.foreground),
                         decoration: const InputDecoration(
-                          hintText: 'Enter phone number',
+                          hintText: 'Enter username or phone',
                         ),
                       ),
                       const SizedBox(height: 16),
 
-                      Text(
-                        l10n.text('passwordPlaceholder').toUpperCase(),
-                        style: const TextStyle(
+                      const Text(
+                        'PASSWORD',
+                        style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
                           color: AppColors.foregroundSubtle,
@@ -170,30 +223,38 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 6),
                       TextField(
-                        controller: _pinController,
+                        controller: _passwordController,
                         obscureText: true,
                         style: const TextStyle(color: AppColors.foreground),
                         decoration: const InputDecoration(
-                          hintText: 'Enter PIN',
+                          hintText: 'Enter password',
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
+
+                      if (_errorMessage != null) ...[
+                        Text(
+                          _errorMessage!,
+                          style: const TextStyle(fontSize: 12.0, color: AppColors.error, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
 
                       SizedBox(
                         width: double.infinity,
+                        height: 46,
                         child: ElevatedButton(
-                          onPressed: () {
-                            authService.switchRole(_selectedRole);
-                            if (_selectedRole == UserRole.admin) {
-                              context.go('/admin');
-                            } else {
-                              context.go('/farmer');
-                            }
-                          },
-                          child: Text(l10n.text('login')),
+                          onPressed: _isSubmitting ? null : _handleLogin,
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background),
+                                )
+                              : Text(l10n.text('login')),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Center(
                         child: TextButton(
                           onPressed: () => context.go('/register'),

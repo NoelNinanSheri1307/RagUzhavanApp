@@ -63,13 +63,6 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
         subtitle: farmer != null
             ? '${farmer.state} · ${farmer.district} (${farmer.block} Block) · ${farmer.crops.join(", ")}'
             : 'Region-Aware Agricultural Intelligence',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.location_on_outlined, color: AppColors.straw, size: 20),
-            onPressed: () => context.go('/farmer/region'),
-            tooltip: l10n.text('changeRegion'),
-          ),
-        ],
       ),
       bottomNavigationBar: const EditorialNavBar(currentPath: '/farmer'),
       body: SingleChildScrollView(
@@ -84,7 +77,6 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                 EditorialSlideUp(
                   delay: const Duration(milliseconds: 100),
                   child: FieldNotebookCard(
-                    onTap: () => context.go('/farmer/region'),
                     title: 'FARMER INTELLIGENCE SCOPE',
                     subtitle: farmer != null
                         ? 'State: ${farmer.state} · District: ${farmer.district} · Block: ${farmer.block}'
@@ -110,7 +102,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                             ],
                           ),
                         ),
-                        const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.straw),
+                        const Icon(Icons.grass, size: 20, color: AppColors.straw),
                       ],
                     ),
                   ),

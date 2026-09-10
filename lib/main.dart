@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'core/config/app_config.dart';
 import 'core/theme/app_theme.dart';
@@ -31,6 +32,7 @@ class _RagUzhavanAppState extends State<RagUzhavanApp> {
   late final ApiRagRepository _ragRepository;
   late final AuthService _authService;
   late final LocaleNotifier _localeNotifier;
+  late final GoRouter _router;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _RagUzhavanAppState extends State<RagUzhavanApp> {
     _ragRepository = ApiRagRepository(_apiService);
     _authService = AuthService(authRepository: _authRepository);
     _localeNotifier = LocaleNotifier();
+    _router = AppRouter.createRouter(_authService);
   }
 
   @override
@@ -55,8 +58,6 @@ class _RagUzhavanAppState extends State<RagUzhavanApp> {
       ],
       child: Consumer<LocaleNotifier>(
         builder: (context, localeNotifier, child) {
-          final router = AppRouter.createRouter(_authService);
-
           return MaterialApp.router(
             title: AppConfig.appName,
             debugShowCheckedModeBanner: false,
@@ -71,7 +72,7 @@ class _RagUzhavanAppState extends State<RagUzhavanApp> {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            routerConfig: router,
+            routerConfig: _router,
           );
         },
       ),

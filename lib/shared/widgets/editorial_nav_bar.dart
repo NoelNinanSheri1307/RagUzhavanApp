@@ -47,19 +47,11 @@ class EditorialNavBar extends StatelessWidget {
             ),
             _buildNavItem(
               context: context,
-              icon: Icons.map_outlined,
-              activeIcon: Icons.map,
-              label: l10n.text('navRegion'),
-              path: '/farmer/region',
-              isSelected: currentPath == '/farmer/region',
-            ),
-            _buildNavItem(
-              context: context,
-              icon: Icons.cell_tower_outlined,
-              activeIcon: Icons.cell_tower,
-              label: l10n.text('navLowBandwidth'),
-              path: '/farmer/low-bandwidth',
-              isSelected: currentPath == '/farmer/low-bandwidth',
+              icon: Icons.hub_outlined,
+              activeIcon: Icons.hub,
+              label: 'Knowledge Map',
+              path: '/graph',
+              isSelected: currentPath == '/graph',
             ),
             if (authService.isAdmin)
               _buildNavItem(

@@ -8,7 +8,6 @@ import '../../core/localization/locale_notifier.dart';
 import '../../shared/widgets/field_notebook_card.dart';
 import '../../shared/widgets/public_source_badge.dart';
 import '../../shared/animations/editorial_transitions.dart';
-import '../../shared/animations/spring_card_fan.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -194,32 +193,6 @@ class LandingScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 30),
 
-                        // Action Launcher
-                        EditorialSlideUp(
-                          delay: const Duration(milliseconds: 300),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () => context.go('/farmer'),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(l10n.text('askQuestion')),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.arrow_forward, size: 16),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 36),
-                        const Divider(),
-                        const SizedBox(height: 24),
-
                         // Public Datasets Editorially Presented
                         Text(
                           l10n.text('publicSourcesTitle'),
@@ -247,45 +220,15 @@ class LandingScreen extends StatelessWidget {
 
                         const SizedBox(height: 36),
 
-                        // Spring Physics Cards Inspector
-                        SpringCardFan(
-                          child: FieldNotebookCard(
-                            title: 'Mock Grounding Testbed & Scenarios',
-                            subtitle: 'Simulate deterministic rules, clarification prompts, and block staleness',
-                            tagText: 'PROTOTYPE TESTBED',
-                            tagColor: AppColors.field,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Test key architectural capabilities established in RagUzhavan:',
-                                  style: TextStyle(fontSize: 13.0, color: AppColors.foregroundMuted),
-                                ),
-                                const SizedBox(height: 14),
-                                Wrap(
-                                  spacing: 10,
-                                  runSpacing: 10,
-                                  children: [
-                                    OutlinedButton(
-                                      onPressed: () => context.go('/farmer/response?scenario=grounded'),
-                                      child: const Text('1. Grounded Paddy Advisory (Budalur Block)'),
-                                    ),
-                                    OutlinedButton(
-                                      onPressed: () => context.go('/farmer/response?scenario=clarification_location'),
-                                      child: const Text('2. Missing Location Clarification Prompt'),
-                                    ),
-                                    OutlinedButton(
-                                      onPressed: () => context.go('/farmer/response?scenario=no_data'),
-                                      child: const Text('3. No Current Data for Block (Kadaladi)'),
-                                    ),
-                                    OutlinedButton(
-                                      onPressed: () => context.go('/farmer/response?scenario=tamil_grounded'),
-                                      child: const Text('4. Tamil Advisory (தமிழ்)'),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                        // System Capabilities Overview Card
+                        FieldNotebookCard(
+                          title: 'REGIONAL RAG PIPELINE & EVIDENCE ENGINE',
+                          subtitle: 'Verified extension literature and vector store retrieval',
+                          tagText: 'SYSTEM ARCHITECTURE',
+                          tagColor: AppColors.field,
+                          child: const Text(
+                            'RagUzhavan connects verified agricultural research bulletins from Tamil Nadu Agricultural University (TNAU) and ICAR to authenticated farmers with hands-free speech and on-device translation.',
+                            style: TextStyle(fontSize: 13.0, color: AppColors.foregroundMuted, height: 1.5),
                           ),
                         ),
                         const SizedBox(height: 30),

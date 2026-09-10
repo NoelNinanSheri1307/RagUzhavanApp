@@ -44,22 +44,37 @@ class AuthService extends ChangeNotifier {
   bool get isAdmin => _role == UserRole.admin;
   AuthRepository get repository => _authRepository;
 
-  Future<void> loginAsFarmer(Farmer farmer) async {
+  Future<bool> login({
+    required String username,
+    required String password,
+    UserRole role = UserRole.farmer,
+  }) async {
+    final authRole = (role == UserRole.admin) ? AuthRole.admin : AuthRole.farmer;
+    final user = await _authRepository.login(
+      phoneOrUsername: username,
+      password: password,
+      role: authRole,
+    );
+
+    if (user != null) {
+      _role = user.isAdmin ? UserRole.admin : UserRole.farmer;
+      _currentFarmer = user.farmer;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> registerFarmer(Farmer farmer, {String password = 'password123'}) async {
     final user = await _authRepository.registerFarmer(farmer);
     _role = UserRole.farmer;
     _currentFarmer = user.farmer ?? farmer;
     notifyListeners();
+    return true;
   }
 
   Future<void> loginAsAdmin() async {
-    await _authRepository.login(
-      phoneOrUsername: 'admin',
-      password: 'password',
-      role: AuthRole.admin,
-    );
-    _role = UserRole.admin;
-    _currentFarmer = null;
-    notifyListeners();
+    await login(username: 'admin', password: 'password', role: UserRole.admin);
   }
 
   Future<void> logout() async {

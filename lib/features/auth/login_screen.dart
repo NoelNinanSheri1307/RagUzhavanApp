@@ -37,6 +37,37 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 10),
+                Center(
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          height: 56,
+                          width: 56,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.grass, color: AppColors.straw, size: 48),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'RagUzhavan',
+                        style: TextStyle(
+                          fontFamily: 'FootlightMTLight',
+                          fontSize: 26.0,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Region-Aware Agricultural Intelligence System',
+                        style: TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 20),
                 FieldNotebookCard(
                   title: 'PORTAL AUTHENTICATION',

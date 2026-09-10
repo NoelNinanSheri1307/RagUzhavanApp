@@ -313,17 +313,18 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
     return FieldNotebookCard(
       onTap: () => context.go('/farmer/response?scenario=$scenarioKey'),
       padding: const EdgeInsets.all(14.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 450;
+          if (isCompact) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
                   style: const TextStyle(
                     fontFamily: AppTheme.fontFootlight,
-                    fontSize: 16.0,
+                    fontSize: 15.5,
                     color: AppColors.foreground,
                   ),
                 ),
@@ -332,28 +333,76 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                   district,
                   style: const TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
                 ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                      decoration: BoxDecoration(
+                        color: badgeColor.withValues(alpha: 0.15),
+                        border: Border.all(color: badgeColor, width: 1.0),
+                      ),
+                      child: Text(
+                        badge.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: badgeColor,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, color: AppColors.foregroundSubtle, size: 18),
+                  ],
+                ),
               ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            decoration: BoxDecoration(
-              color: badgeColor.withValues(alpha: 0.15),
-              border: Border.all(color: badgeColor, width: 1.0),
-            ),
-            child: Text(
-              badge.toUpperCase(),
-              style: TextStyle(
-                fontSize: 10.0,
-                fontWeight: FontWeight.w700,
-                color: badgeColor,
-                letterSpacing: 0.5,
+            );
+          }
+          return Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontFamily: AppTheme.fontFootlight,
+                        fontSize: 16.0,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      district,
+                      style: const TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right, color: AppColors.foregroundSubtle, size: 18),
-        ],
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: 0.15),
+                  border: Border.all(color: badgeColor, width: 1.0),
+                ),
+                child: Text(
+                  badge.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 10.0,
+                    fontWeight: FontWeight.w700,
+                    color: badgeColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: AppColors.foregroundSubtle, size: 18),
+            ],
+          );
+        },
       ),
     );
   }

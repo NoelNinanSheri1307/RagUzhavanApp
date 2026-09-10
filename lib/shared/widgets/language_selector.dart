@@ -23,7 +23,7 @@ class LanguageSelector extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              isTamil ? 'ТА' : 'EN',
+              isTamil ? 'TA' : 'EN',
               style: TextStyle(
                 fontSize: 11.0,
                 fontWeight: FontWeight.w700,

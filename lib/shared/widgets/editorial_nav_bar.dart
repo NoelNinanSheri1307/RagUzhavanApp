@@ -94,25 +94,30 @@ class EditorialNavBar extends StatelessWidget {
   }) {
     final color = isSelected ? AppColors.straw : AppColors.foregroundSubtle;
 
-    return InkWell(
-      onTap: () => context.go(path),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(isSelected ? activeIcon : icon, color: color, size: 20),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10.0,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: color,
-                letterSpacing: 0.2,
+    return Expanded(
+      child: InkWell(
+        onTap: () => context.go(path),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(isSelected ? activeIcon : icon, color: color, size: 20),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: color,
+                  letterSpacing: 0.1,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

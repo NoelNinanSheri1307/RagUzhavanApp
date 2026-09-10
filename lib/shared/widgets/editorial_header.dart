@@ -42,6 +42,18 @@ class EditorialHeader extends StatelessWidget implements PreferredSizeWidget {
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
               ),
               const SizedBox(width: 8),
+            ] else ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  height: 26,
+                  width: 26,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.grass, color: AppColors.straw, size: 22),
+                ),
+              ),
+              const SizedBox(width: 10),
             ],
             Expanded(
               child: Column(

@@ -54,28 +54,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: 'Switch application-wide UI text language',
                   tagText: 'LOCALIZATION',
                   tagColor: AppColors.straw,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isCompact = constraints.maxWidth < 450;
+                      return Flex(
+                        direction: isCompact ? Axis.vertical : Axis.horizontal,
+                        crossAxisAlignment: isCompact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            isTamil ? 'தற்போது: தமிழ் (Tamil)' : 'Current: English',
-                            style: const TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600, color: AppColors.paper),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isTamil ? 'தற்போது: தமிழ் (Tamil)' : 'Current: English',
+                                style: const TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600, color: AppColors.paper),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isTamil ? 'அனைத்து முகப்பு உரைகளும் தமிழில் மாறும்' : 'All UI text, navigation, and badges rendered in English',
+                                style: const TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            isTamil ? 'அனைத்து முகப்பு உரைகளும் தமிழில் மாறும்' : 'All UI text, navigation, and badges rendered in English',
-                            style: const TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
+                          if (isCompact) const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: () => localeNotifier.toggleLanguage(),
+                            child: Text(l10n.text('switchLanguage')),
                           ),
                         ],
-                      ),
-                      ElevatedButton(
-                        onPressed: () => localeNotifier.toggleLanguage(),
-                        child: Text(l10n.text('switchLanguage')),
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -143,42 +151,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: 'Switch between Farmer and Admin interface modes',
                   tagText: 'MOCK ROLE',
                   tagColor: AppColors.leaf,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'CURRENT ROLE: ${authService.role.name.toUpperCase()}',
-                        style: const TextStyle(fontSize: 13.0, fontWeight: FontWeight.w700, color: AppColors.straw),
-                      ),
-                      Row(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isCompact = constraints.maxWidth < 480;
+                      return Flex(
+                        direction: isCompact ? Axis.vertical : Axis.horizontal,
+                        crossAxisAlignment: isCompact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          if (!authService.isAdmin)
-                            OutlinedButton(
-                              onPressed: () {
-                                authService.switchRole(UserRole.admin);
-                                context.go('/admin');
-                              },
-                              child: const Text('Switch to Admin'),
-                            )
-                          else
-                            OutlinedButton(
-                              onPressed: () {
-                                authService.switchRole(UserRole.farmer);
-                                context.go('/farmer');
-                              },
-                              child: const Text('Switch to Farmer'),
-                            ),
-                          const SizedBox(width: 8),
-                          TextButton(
-                            onPressed: () {
-                              authService.logout();
-                              context.go('/login');
-                            },
-                            child: Text(l10n.text('logout'), style: const TextStyle(color: AppColors.error)),
+                          Text(
+                            'CURRENT ROLE: ${authService.role.name.toUpperCase()}',
+                            style: const TextStyle(fontSize: 13.0, fontWeight: FontWeight.w700, color: AppColors.straw),
+                          ),
+                          if (isCompact) const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              if (!authService.isAdmin)
+                                OutlinedButton(
+                                  onPressed: () {
+                                    authService.switchRole(UserRole.admin);
+                                    context.go('/admin');
+                                  },
+                                  child: const Text('Switch to Admin'),
+                                )
+                              else
+                                OutlinedButton(
+                                  onPressed: () {
+                                    authService.switchRole(UserRole.farmer);
+                                    context.go('/farmer');
+                                  },
+                                  child: const Text('Switch to Farmer'),
+                                ),
+                              TextButton(
+                                onPressed: () {
+                                  authService.logout();
+                                  context.go('/login');
+                                },
+                                child: Text(l10n.text('logout'), style: const TextStyle(color: AppColors.error)),
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 30),

@@ -44,6 +44,10 @@ class _EditorialFadeInState extends State<EditorialFadeIn>
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
+    if (disableAnimations) {
+      return widget.child;
+    }
     return FadeTransition(opacity: _opacity, child: widget.child);
   }
 }
@@ -100,6 +104,10 @@ class _EditorialSlideUpState extends State<EditorialSlideUp>
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
+    if (disableAnimations) {
+      return widget.child;
+    }
     return FadeTransition(
       opacity: _fade,
       child: SlideTransition(position: _slide, child: widget.child),
@@ -158,6 +166,10 @@ class _UnfoldCardState extends State<UnfoldCard>
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
+    if (disableAnimations) {
+      return widget.isExpanded ? widget.child : const SizedBox.shrink();
+    }
     return SizeTransition(
       sizeFactor: _expand,
       axisAlignment: -1.0,
@@ -205,6 +217,17 @@ class _PulseIndicatorState extends State<PulseIndicator>
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
+    if (disableAnimations) {
+      return Container(
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          color: widget.color,
+          shape: BoxShape.circle,
+        ),
+      );
+    }
     return ScaleTransition(
       scale: _scale,
       child: Container(

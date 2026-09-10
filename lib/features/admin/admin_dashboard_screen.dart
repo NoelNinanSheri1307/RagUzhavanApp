@@ -30,35 +30,66 @@ class AdminDashboardScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildAdminMetricCard(
-                        title: l10n.text('registeredFarmers'),
-                        value: '1,428',
-                        subtext: '+32 enrolled this week',
-                        color: AppColors.straw,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildAdminMetricCard(
-                        title: l10n.text('queriesProcessed'),
-                        value: '384',
-                        subtext: '88% grounded evidence rate',
-                        color: AppColors.field,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildAdminMetricCard(
-                        title: l10n.text('outdatedDataAlerts'),
-                        value: '2 Districts',
-                        subtext: 'Ramanathapuram > 180 days',
-                        color: AppColors.warning,
-                      ),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isCompact = constraints.maxWidth < 600;
+                    if (isCompact) {
+                      return Column(
+                        children: [
+                          _buildAdminMetricCard(
+                            title: l10n.text('registeredFarmers'),
+                            value: '1,428',
+                            subtext: '+32 enrolled this week',
+                            color: AppColors.straw,
+                          ),
+                          const SizedBox(height: 10),
+                          _buildAdminMetricCard(
+                            title: l10n.text('queriesProcessed'),
+                            value: '384',
+                            subtext: '88% grounded evidence rate',
+                            color: AppColors.field,
+                          ),
+                          const SizedBox(height: 10),
+                          _buildAdminMetricCard(
+                            title: l10n.text('outdatedDataAlerts'),
+                            value: '2 Districts',
+                            subtext: 'Ramanathapuram > 180 days',
+                            color: AppColors.warning,
+                          ),
+                        ],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _buildAdminMetricCard(
+                            title: l10n.text('registeredFarmers'),
+                            value: '1,428',
+                            subtext: '+32 enrolled this week',
+                            color: AppColors.straw,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildAdminMetricCard(
+                            title: l10n.text('queriesProcessed'),
+                            value: '384',
+                            subtext: '88% grounded evidence rate',
+                            color: AppColors.field,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildAdminMetricCard(
+                            title: l10n.text('outdatedDataAlerts'),
+                            value: '2 Districts',
+                            subtext: 'Ramanathapuram > 180 days',
+                            color: AppColors.warning,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
 

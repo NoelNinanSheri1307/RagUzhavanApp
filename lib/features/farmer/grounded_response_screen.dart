@@ -198,29 +198,55 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
                                 const Divider(height: 20),
 
                                 // WHEN & HOW MUCH
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: _buildStructuredSection(
-                                        label: l10n.text('secWhen'),
-                                        text: isTamil && _response!.whenToApplyTamil.isNotEmpty
-                                            ? _response!.whenToApplyTamil
-                                            : _response!.whenToApply,
-                                        color: AppColors.leaf,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: _buildStructuredSection(
-                                        label: l10n.text('secHowMuch'),
-                                        text: isTamil && _response!.howMuchAmountTamil.isNotEmpty
-                                            ? _response!.howMuchAmountTamil
-                                            : _response!.howMuchAmount,
-                                        color: AppColors.straw,
-                                      ),
-                                    ),
-                                  ],
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final isCompact = constraints.maxWidth < 450;
+                                    return isCompact
+                                        ? Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              _buildStructuredSection(
+                                                label: l10n.text('secWhen'),
+                                                text: isTamil && _response!.whenToApplyTamil.isNotEmpty
+                                                    ? _response!.whenToApplyTamil
+                                                    : _response!.whenToApply,
+                                                color: AppColors.leaf,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              _buildStructuredSection(
+                                                label: l10n.text('secHowMuch'),
+                                                text: isTamil && _response!.howMuchAmountTamil.isNotEmpty
+                                                    ? _response!.howMuchAmountTamil
+                                                    : _response!.howMuchAmount,
+                                                color: AppColors.straw,
+                                              ),
+                                            ],
+                                          )
+                                        : Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: _buildStructuredSection(
+                                                  label: l10n.text('secWhen'),
+                                                  text: isTamil && _response!.whenToApplyTamil.isNotEmpty
+                                                      ? _response!.whenToApplyTamil
+                                                      : _response!.whenToApply,
+                                                  color: AppColors.leaf,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 14),
+                                              Expanded(
+                                                child: _buildStructuredSection(
+                                                  label: l10n.text('secHowMuch'),
+                                                  text: isTamil && _response!.howMuchAmountTamil.isNotEmpty
+                                                      ? _response!.howMuchAmountTamil
+                                                      : _response!.howMuchAmount,
+                                                  color: AppColors.straw,
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                  },
                                 ),
                                 const Divider(height: 20),
 
@@ -379,26 +405,75 @@ class _GroundedResponseScreenState extends State<GroundedResponseScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
       decoration: BoxDecoration(color: bg, border: Border.all(color: border, width: 1.0)),
-      child: Row(
-        children: [
-          Icon(icon, color: border, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              statusText,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: border,
-                letterSpacing: 0.8,
-              ),
-            ),
-          ),
-          Text(
-            '${res.districtName} (${res.blockName} Block)',
-            style: const TextStyle(fontSize: 11.0, color: AppColors.foregroundMuted),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 500;
+          return isCompact
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(icon, color: border, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            statusText,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: border,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'TIED TO LOCATION: ${res.districtName.toUpperCase()} · ${res.blockName.toUpperCase()} BLOCK',
+                      style: const TextStyle(
+                        fontSize: 10.0,
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.straw,
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Icon(icon, color: border, size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: border,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Text(
+                        'LOCATION: ${res.districtName} (${res.blockName} Block)',
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontFamily: 'monospace',
+                          color: AppColors.straw,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+        },
       ),
     );
   }

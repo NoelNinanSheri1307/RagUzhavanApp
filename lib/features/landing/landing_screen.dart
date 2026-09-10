@@ -35,23 +35,32 @@ class LandingScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                        decoration: BoxDecoration(
-                          color: AppColors.straw.withValues(alpha: 0.15),
-                          border: Border.all(color: AppColors.straw, width: 1.0),
-                        ),
-                        child: const Text(
-                          'RAG',
-                          style: TextStyle(
-                            fontSize: 11.0,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.straw,
-                            letterSpacing: 1.2,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          height: 32,
+                          width: 32,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                            decoration: BoxDecoration(
+                              color: AppColors.straw.withValues(alpha: 0.15),
+                              border: Border.all(color: AppColors.straw, width: 1.0),
+                            ),
+                            child: const Text(
+                              'RAG',
+                              style: TextStyle(
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.straw,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       const Text(
                         'RagUzhavan',
                         style: TextStyle(

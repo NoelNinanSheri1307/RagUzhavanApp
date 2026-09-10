@@ -103,99 +103,105 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                       ),
                       const SizedBox(height: 10),
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildParameterDropdown(
-                              label: l10n.text('districtContext'),
-                              value: _district,
-                              items: const ['Thanjavur', 'Coimbatore', 'Ramanathapuram', 'Madurai', 'Omit District (Test Clarification)'],
-                              onChanged: (val) => setState(() {
-                                _district = val!;
-                                if (_district == 'Coimbatore') _block = 'Thondamuthur';
-                                if (_district == 'Ramanathapuram') _block = 'Kadaladi';
-                                if (_district == 'Madurai') _block = 'Thiruparankundram';
-                                if (_district == 'Thanjavur') _block = 'Budalur';
-                                if (_district.contains('Omit')) _block = 'Omit Block';
-                              }),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildParameterDropdown(
-                              label: l10n.text('blockContext'),
-                              value: _block,
-                              items: const ['Budalur', 'Thondamuthur', 'Kadaladi', 'Thiruparankundram', 'Omit Block'],
-                              onChanged: (val) => setState(() => _block = val!),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isCompact = constraints.maxWidth < 500;
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildParameterDropdown(
-                              label: l10n.text('cropNameLabel'),
-                              value: _selectedCrop,
-                              items: const [
-                                'Paddy / Rice',
-                                'Cotton',
-                                'Groundnut',
-                                'Blackgram',
+                          Widget buildPair(Widget first, Widget second) {
+                            if (isCompact) {
+                              return Column(
+                                children: [
+                                  first,
+                                  const SizedBox(height: 12),
+                                  second,
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                Expanded(child: first),
+                                const SizedBox(width: 12),
+                                Expanded(child: second),
                               ],
-                              onChanged: (val) => setState(() => _selectedCrop = val!),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildParameterDropdown(
-                              label: l10n.text('growthStageLabel'),
-                              value: _growthStage,
-                              items: const [
-                                'Nursery Stage',
-                                'Tillering Phase',
-                                'Panicle Initiation',
-                                'Grain Filling',
-                              ],
-                              onChanged: (val) => setState(() => _growthStage = val!),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
+                            );
+                          }
 
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildParameterDropdown(
-                              label: l10n.text('irrigationLabel'),
-                              value: _irrigationType,
-                              items: const [
-                                'Canal-fed Alluvial',
-                                'Borewell / Tube well',
-                                'Rainfed Dryland',
-                                'Drip Fertigation',
-                              ],
-                              onChanged: (val) => setState(() => _irrigationType = val!),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildParameterDropdown(
-                              label: l10n.text('cropSeason'),
-                              value: _season,
-                              items: const [
-                                'Kuruvai (June-Sept)',
-                                'Samba (Aug-Jan)',
-                                'Thaladi (Oct-Feb)',
-                                'Navarai (Dec-May)',
-                              ],
-                              onChanged: (val) => setState(() => _season = val!),
-                            ),
-                          ),
-                        ],
+                          return Column(
+                            children: [
+                              buildPair(
+                                _buildParameterDropdown(
+                                  label: l10n.text('districtContext'),
+                                  value: _district,
+                                  items: const ['Thanjavur', 'Coimbatore', 'Ramanathapuram', 'Madurai', 'Omit District (Test Clarification)'],
+                                  onChanged: (val) => setState(() {
+                                    _district = val!;
+                                    if (_district == 'Coimbatore') _block = 'Thondamuthur';
+                                    if (_district == 'Ramanathapuram') _block = 'Kadaladi';
+                                    if (_district == 'Madurai') _block = 'Thiruparankundram';
+                                    if (_district == 'Thanjavur') _block = 'Budalur';
+                                    if (_district.contains('Omit')) _block = 'Omit Block';
+                                  }),
+                                ),
+                                _buildParameterDropdown(
+                                  label: l10n.text('blockContext'),
+                                  value: _block,
+                                  items: const ['Budalur', 'Thondamuthur', 'Kadaladi', 'Thiruparankundram', 'Omit Block'],
+                                  onChanged: (val) => setState(() => _block = val!),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              buildPair(
+                                _buildParameterDropdown(
+                                  label: l10n.text('cropNameLabel'),
+                                  value: _selectedCrop,
+                                  items: const [
+                                    'Paddy / Rice',
+                                    'Cotton',
+                                    'Groundnut',
+                                    'Blackgram',
+                                  ],
+                                  onChanged: (val) => setState(() => _selectedCrop = val!),
+                                ),
+                                _buildParameterDropdown(
+                                  label: l10n.text('growthStageLabel'),
+                                  value: _growthStage,
+                                  items: const [
+                                    'Nursery Stage',
+                                    'Tillering Phase',
+                                    'Panicle Initiation',
+                                    'Grain Filling',
+                                  ],
+                                  onChanged: (val) => setState(() => _growthStage = val!),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              buildPair(
+                                _buildParameterDropdown(
+                                  label: l10n.text('irrigationLabel'),
+                                  value: _irrigationType,
+                                  items: const [
+                                    'Canal-fed Alluvial',
+                                    'Borewell / Tube well',
+                                    'Rainfed Dryland',
+                                    'Drip Fertigation',
+                                  ],
+                                  onChanged: (val) => setState(() => _irrigationType = val!),
+                                ),
+                                _buildParameterDropdown(
+                                  label: l10n.text('cropSeason'),
+                                  value: _season,
+                                  items: const [
+                                    'Kuruvai (June-Sept)',
+                                    'Samba (Aug-Jan)',
+                                    'Thaladi (Oct-Feb)',
+                                    'Navarai (Dec-May)',
+                                  ],
+                                  onChanged: (val) => setState(() => _season = val!),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
 

@@ -59,7 +59,7 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
 
     return Scaffold(
       appBar: EditorialHeader(
-        title: l10n.text('farmerDashboardTitle'),
+        title: authService.isAdmin ? 'ADMIN OVERVIEW' : l10n.text('farmerDashboardTitle'),
         subtitle: farmer != null
             ? '${farmer.state} · ${farmer.district} (${farmer.block} Block) · ${farmer.crops.join(", ")}'
             : 'Region-Aware Agricultural Intelligence',

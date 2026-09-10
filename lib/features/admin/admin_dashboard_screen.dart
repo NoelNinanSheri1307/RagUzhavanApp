@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/services/api_service.dart';
+import '../../data/services/auth_service.dart';
+import '../../data/repositories/rag_repository.dart';
+import '../../data/models/chat_session_model.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
@@ -19,6 +22,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _isLoading = true;
   bool _guardrailsEnabled = true;
   List<dynamic> _sources = [];
+  List<ChatSessionModel> _adminSessions = [];
 
   @override
   void initState() {
@@ -28,11 +32,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _loadAdminData() async {
     final apiService = Provider.of<ApiService>(context, listen: false);
+    final ragRepo = Provider.of<RagRepository>(context, listen: false);
     setState(() => _isLoading = true);
 
     try {
       final settings = await apiService.getAdminSettings();
       final sourcesList = await apiService.getSources();
+      final sessions = await ragRepo.getSessions();
 
       if (mounted) {
         setState(() {
@@ -42,6 +48,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           if (sourcesList != null) {
             _sources = sourcesList;
           }
+          _adminSessions = sessions;
           _isLoading = false;
         });
       }
@@ -81,12 +88,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Scaffold(
       appBar: EditorialHeader(
         title: 'ADMIN KNOWLEDGE BASE CONTROL',
         subtitle: 'Railway RAG Retrieval System Settings & Ingested Document Management',
-        showBackButton: true,
-        onBack: () => context.go('/farmer'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppColors.error, size: 20),
+            onPressed: () {
+              authService.logout();
+              context.go('/login');
+            },
+            tooltip: 'Sign Out Admin Portal',
+          ),
+        ],
       ),
       bottomNavigationBar: const EditorialNavBar(currentPath: '/admin'),
       body: _isLoading
@@ -275,6 +292,67 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           style: TextStyle(fontSize: 12.5, color: AppColors.foregroundMuted),
                         ),
                       ),
+                      const SizedBox(height: 20),
+
+                      // Admin Active RAG Chat Sessions Card
+                      FieldNotebookCard(
+                        title: 'ACTIVE RAG CHAT SESSIONS & CONVERSATIONS',
+                        subtitle: 'Inspect past multi-turn RAG queries, evidence citations, and user sessions',
+                        tagText: 'RAG CHAT LOGS',
+                        tagColor: AppColors.straw,
+                        child: _adminSessions.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 12.0),
+                                child: Text(
+                                  'No active chat sessions found. Start asking queries via "Query System" tab to populate sessions.',
+                                  style: TextStyle(fontSize: 12.0, color: AppColors.foregroundMuted),
+                                ),
+                              )
+                            : ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _adminSessions.length > 5 ? 5 : _adminSessions.length,
+                                separatorBuilder: (context, index) => const SizedBox(height: 8),
+                                itemBuilder: (context, index) {
+                                  final s = _adminSessions[index];
+                                  return InkWell(
+                                    onTap: () => context.go('/farmer/ask?session_id=${s.id}'),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10.0),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surfaceHighlight,
+                                        border: Border.all(color: AppColors.border),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.chat_outlined, color: AppColors.straw, size: 18),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  s.title,
+                                                  style: const TextStyle(fontSize: 13.0, fontWeight: FontWeight.w600, color: AppColors.paper),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  'Session #${s.id} · Created ${s.createdAt.toString().split(".").first}',
+                                                  style: const TextStyle(fontSize: 10.0, fontFamily: 'monospace', color: AppColors.foregroundSubtle),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.straw),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
                       const SizedBox(height: 30),
                     ],
                   ),
@@ -291,6 +369,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required Color color,
   }) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(14.0),
       decoration: BoxDecoration(
         color: AppColors.surface,

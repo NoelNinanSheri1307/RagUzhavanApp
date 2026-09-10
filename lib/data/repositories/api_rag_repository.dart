@@ -84,7 +84,7 @@ class ApiRagRepository implements RagRepository {
       final queryPayload = <String, dynamic>{
         'question': question,
         'mode': mode,
-        if (sensors != null) 'sensors': sensors!,
+        if (sensors != null) 'sensors': sensors,
       };
 
       final res = await apiService.askSession(sessionId, queryPayload) ??
@@ -96,8 +96,12 @@ class ApiRagRepository implements RagRepository {
         final rawSources = res['sources'] as List<dynamic>?;
         final isTamil = question.contains(RegExp(r'[\u0B80-\u0BFF]'));
 
-        // Check for missing slot clarification response
-        if (answer.contains('need your district') || answer.contains('missing parameters') || answer.contains('specify crop')) {
+        // Check for missing slot / telemetry clarification response
+        if (answer.toLowerCase().contains('need your district') ||
+            answer.toLowerCase().contains('missing parameters') ||
+            answer.toLowerCase().contains('specify crop') ||
+            answer.toLowerCase().contains('clarification needed') ||
+            answer.toLowerCase().contains('telemetry')) {
           return RagResponse(
             id: 'RESP-${DateTime.now().millisecondsSinceEpoch}',
             queryId: 'QRY-${DateTime.now().millisecondsSinceEpoch}',

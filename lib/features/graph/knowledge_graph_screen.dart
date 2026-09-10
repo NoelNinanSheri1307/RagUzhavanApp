@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -247,12 +248,15 @@ class _KnowledgeGraphScreenState extends State<KnowledgeGraphScreen> {
                         ...List.generate(filteredNodes.length, (index) {
                           final node = filteredNodes[index];
                           final isSelected = _selectedNode?.id == node.id;
+                          final count = filteredNodes.length;
+                          final double angle = (2 * math.pi * index / count) - (math.pi / 2);
+                          final double radiusX = count <= 3 ? 0.70 : 0.82;
+                          final double radiusY = count <= 3 ? 0.65 : 0.75;
+                          final double alignX = radiusX * math.cos(angle);
+                          final double alignY = radiusY * math.sin(angle);
 
                           return Align(
-                            alignment: Alignment(
-                              (index % 2 == 0 ? 0.7 : -0.7) * (1 - (index * 0.1)),
-                              (index % 3 == 0 ? 0.6 : -0.6) * (1 - (index * 0.08)),
-                            ),
+                            alignment: Alignment(alignX, alignY),
                             child: InkWell(
                               onTap: () => setState(() => _selectedNode = node),
                               child: Container(

@@ -34,8 +34,8 @@ class EditorialNavBar extends StatelessWidget {
               icon: Icons.dashboard_outlined,
               activeIcon: Icons.dashboard,
               label: l10n.text('navHome'),
-              path: '/farmer',
-              isSelected: currentPath == '/farmer',
+              path: authService.isAdmin ? '/admin' : '/farmer',
+              isSelected: currentPath == '/farmer' || (authService.isAdmin && currentPath == '/admin'),
             ),
             _buildNavItem(
               context: context,

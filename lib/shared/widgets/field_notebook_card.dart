@@ -84,7 +84,16 @@ class FieldNotebookCard extends StatelessWidget {
       }
 
       if (trailing != null) {
-        rowChildren.add(trailing!);
+        rowChildren.add(const SizedBox(width: 8));
+        rowChildren.add(
+          Flexible(
+            fit: FlexFit.loose,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: trailing!,
+            ),
+          ),
+        );
       }
 
       headerWidget = Container(

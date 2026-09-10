@@ -23,14 +23,10 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
   late final TextEditingController _queryController;
   late final SpeechToTextService _sttService;
 
-  // Sensor Mode Input Controllers
+  // Sensor Mode Input Controllers (Strictly Water Level, Temperature, Humidity)
   final TextEditingController _waterLevelCtrl = TextEditingController(text: '5.2 cm');
   final TextEditingController _tempCtrl = TextEditingController(text: '30.6 C');
   final TextEditingController _humidityCtrl = TextEditingController(text: '82%');
-  final TextEditingController _soilMoistureCtrl = TextEditingController(text: '44.5%');
-  final TextEditingController _nitrogenCtrl = TextEditingController(text: '156 ppm');
-  final TextEditingController _phCtrl = TextEditingController(text: '6.8');
-  final TextEditingController _lightCtrl = TextEditingController(text: '32k lx');
 
   bool _isListening = false;
   String? _sttError;
@@ -52,10 +48,6 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
     _waterLevelCtrl.dispose();
     _tempCtrl.dispose();
     _humidityCtrl.dispose();
-    _soilMoistureCtrl.dispose();
-    _nitrogenCtrl.dispose();
-    _phCtrl.dispose();
-    _lightCtrl.dispose();
     _sttService.stopListening();
     super.dispose();
   }
@@ -111,10 +103,6 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
           'water_level': _waterLevelCtrl.text.trim(),
           'temperature': _tempCtrl.text.trim(),
           'humidity': _humidityCtrl.text.trim(),
-          'soil_moisture': _soilMoistureCtrl.text.trim(),
-          'nitrogen': _nitrogenCtrl.text.trim(),
-          'ph': _phCtrl.text.trim(),
-          'light': _lightCtrl.text.trim(),
         };
       }
 
@@ -288,10 +276,6 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                                   _buildSensorField('Water Level', _waterLevelCtrl),
                                   _buildSensorField('Temp (°C)', _tempCtrl),
                                   _buildSensorField('Humidity (%)', _humidityCtrl),
-                                  _buildSensorField('Moisture (%)', _soilMoistureCtrl),
-                                  _buildSensorField('Nitrogen (ppm)', _nitrogenCtrl),
-                                  _buildSensorField('Soil pH', _phCtrl),
-                                  _buildSensorField('Light (lx)', _lightCtrl),
                                 ],
                               ),
                             ],
@@ -322,12 +306,15 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Flexible(
-                                      child: Text(
-                                        l10n.text('askQuestion').toUpperCase(),
-                                        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.8),
-                                      ),
-                                    ),
+                                     Flexible(
+                                       child: FittedBox(
+                                         fit: BoxFit.scaleDown,
+                                         child: Text(
+                                           l10n.text('askQuestion').toUpperCase(),
+                                           style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.8),
+                                         ),
+                                       ),
+                                     ),
                                     const SizedBox(width: 8),
                                     const Icon(Icons.arrow_forward, size: 16),
                                   ],

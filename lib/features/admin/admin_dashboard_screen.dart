@@ -1,153 +1,286 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/localization/app_localizations.dart';
+import '../../data/services/api_service.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
 
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  bool _isLoading = true;
+  bool _guardrailsEnabled = true;
+  List<dynamic> _sources = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAdminData();
+  }
+
+  Future<void> _loadAdminData() async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    setState(() => _isLoading = true);
+
+    try {
+      final settings = await apiService.getAdminSettings();
+      final sourcesList = await apiService.getSources();
+
+      if (mounted) {
+        setState(() {
+          if (settings != null && settings['guardrails_enabled'] != null) {
+            _guardrailsEnabled = settings['guardrails_enabled'] as bool;
+          }
+          if (sourcesList != null) {
+            _sources = sourcesList;
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleGuardrails(bool newValue) async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    setState(() {
+      _guardrailsEnabled = newValue;
+    });
+
+    try {
+      await apiService.updateAdminSettings(newValue);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Guardrails set to: ${newValue ? "ENABLED" : "DISABLED"}'),
+            backgroundColor: newValue ? AppColors.leaf : AppColors.warning,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update guardrails: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: EditorialHeader(
-        title: l10n.text('adminHeader'),
-        subtitle: 'District Advisory Monitoring & Research Freshness Audit',
+        title: 'ADMIN KNOWLEDGE BASE CONTROL',
+        subtitle: 'Railway RAG Retrieval System Settings & Ingested Document Management',
         showBackButton: true,
         onBack: () => context.go('/farmer'),
       ),
       bottomNavigationBar: const EditorialNavBar(currentPath: '/admin'),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isCompact = constraints.maxWidth < 600;
-                    if (isCompact) {
-                      return Column(
-                        children: [
-                          _buildAdminMetricCard(
-                            title: l10n.text('registeredFarmers'),
-                            value: '1,428',
-                            subtext: '+32 enrolled this week',
-                            color: AppColors.straw,
-                          ),
-                          const SizedBox(height: 10),
-                          _buildAdminMetricCard(
-                            title: l10n.text('queriesProcessed'),
-                            value: '384',
-                            subtext: '88% grounded evidence rate',
-                            color: AppColors.field,
-                          ),
-                          const SizedBox(height: 10),
-                          _buildAdminMetricCard(
-                            title: l10n.text('outdatedDataAlerts'),
-                            value: '2 Districts',
-                            subtext: 'Ramanathapuram > 180 days',
-                            color: AppColors.warning,
-                          ),
-                        ],
-                      );
-                    }
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: _buildAdminMetricCard(
-                            title: l10n.text('registeredFarmers'),
-                            value: '1,428',
-                            subtext: '+32 enrolled this week',
-                            color: AppColors.straw,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildAdminMetricCard(
-                            title: l10n.text('queriesProcessed'),
-                            value: '384',
-                            subtext: '88% grounded evidence rate',
-                            color: AppColors.field,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildAdminMetricCard(
-                            title: l10n.text('outdatedDataAlerts'),
-                            value: '2 Districts',
-                            subtext: 'Ramanathapuram > 180 days',
-                            color: AppColors.warning,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                FieldNotebookCard(
-                  title: 'FARMER JURISDICTION DIRECTORY',
-                  subtitle: 'Inspect registered farmer records and crop allocations across districts',
-                  tagText: 'DATABASE AUDIT',
-                  tagColor: AppColors.leaf,
-                  trailing: ElevatedButton(
-                    onPressed: () => context.go('/admin/farmers'),
-                    child: Text(l10n.text('navFarmers')),
-                  ),
-                  child: const Text(
-                    'Access complete directory of enrolled farmers in Thanjavur, Coimbatore, Ramanathapuram, and Madurai districts.',
-                    style: TextStyle(fontSize: 13.0, color: AppColors.foregroundMuted),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                FieldNotebookCard(
-                  title: 'DISTRICT RESEARCH FRESHNESS AUDIT',
-                  subtitle: 'Monitoring university bulletin publication age by region',
-                  tagText: 'DATA AGE MONITORS',
-                  tagColor: AppColors.field,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.straw))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 850),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildAuditRow(
-                        district: 'Thanjavur (Cauvery Delta)',
-                        crop: 'Paddy / Kuruvai',
-                        latestBulletin: 'TNAU-CPG-2025/RICE-BLAST',
-                        ageDays: 14,
-                        isFresh: true,
+                      // Top Real System Metrics
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isCompact = constraints.maxWidth < 600;
+                          if (isCompact) {
+                            return Column(
+                              children: [
+                                _buildAdminMetricCard(
+                                  title: 'INGESTED SOURCES',
+                                  value: '${_sources.length}',
+                                  subtext: 'Chroma Vector Documents',
+                                  color: AppColors.straw,
+                                ),
+                                const SizedBox(height: 10),
+                                _buildAdminMetricCard(
+                                  title: 'RETRIEVAL GUARDRAILS',
+                                  value: _guardrailsEnabled ? 'ACTIVE' : 'DISABLED',
+                                  subtext: 'Strict agricultural filtering',
+                                  color: _guardrailsEnabled ? AppColors.field : AppColors.warning,
+                                ),
+                                const SizedBox(height: 10),
+                                _buildAdminMetricCard(
+                                  title: 'VECTOR PIPELINE',
+                                  value: 'ONLINE',
+                                  subtext: 'Railway Backend Live',
+                                  color: AppColors.leaf,
+                                ),
+                              ],
+                            );
+                          }
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: _buildAdminMetricCard(
+                                  title: 'INGESTED SOURCES',
+                                  value: '${_sources.length}',
+                                  subtext: 'Chroma Vector Documents',
+                                  color: AppColors.straw,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildAdminMetricCard(
+                                  title: 'RETRIEVAL GUARDRAILS',
+                                  value: _guardrailsEnabled ? 'ACTIVE' : 'DISABLED',
+                                  subtext: 'Strict agricultural filtering',
+                                  color: _guardrailsEnabled ? AppColors.field : AppColors.warning,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildAdminMetricCard(
+                                  title: 'VECTOR PIPELINE',
+                                  value: 'ONLINE',
+                                  subtext: 'Railway Backend Live',
+                                  color: AppColors.leaf,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                      const Divider(height: 16),
-                      _buildAuditRow(
-                        district: 'Coimbatore (Western Zone)',
-                        crop: 'Cotton / MCU-5',
-                        latestBulletin: 'CICR-BULLETIN-2025/COTTON',
-                        ageDays: 8,
-                        isFresh: true,
+                      const SizedBox(height: 20),
+
+                      // System Guardrails Toggle Card (PATCH /admin/settings)
+                      FieldNotebookCard(
+                        title: 'RAG GUARDRAILS & RETRIEVAL SETTINGS (PATCH /admin/settings)',
+                        subtitle: 'Control evidence grounding enforcement for all user agricultural queries',
+                        tagText: 'SYSTEM POLICY',
+                        tagColor: AppColors.straw,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Enforce Agricultural Evidence Guardrails',
+                                    style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600, color: AppColors.paper),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'When enabled, non-agricultural queries are filtered out with strict evidence verification.',
+                                    style: TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: _guardrailsEnabled,
+                              onChanged: _toggleGuardrails,
+                              activeThumbColor: AppColors.straw,
+                            ),
+                          ],
+                        ),
                       ),
-                      const Divider(height: 16),
-                      _buildAuditRow(
-                        district: 'Ramanathapuram (Coastal Dry)',
-                        crop: 'Groundnut / TMV-7',
-                        latestBulletin: 'TNAU-DRYLAND-BULLETIN-2024',
-                        ageDays: 194,
-                        isFresh: false,
+                      const SizedBox(height: 20),
+
+                      // Ingested Sources Management (GET /sources)
+                      FieldNotebookCard(
+                        title: 'INGESTED KNOWLEDGE BASE SOURCES (GET /sources)',
+                        subtitle: 'Document corpus used for retrieval grounding in RAG queries',
+                        tagText: 'CHROMA DB SOURCES',
+                        tagColor: AppColors.leaf,
+                        trailing: ElevatedButton(
+                          onPressed: () => context.go('/admin/farmers'),
+                          child: const Text('MANAGE SOURCES'),
+                        ),
+                        child: _sources.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16.0),
+                                child: Text(
+                                  'No ingested documents currently in backend vector store.',
+                                  style: TextStyle(fontSize: 12.5, color: AppColors.foregroundMuted),
+                                ),
+                              )
+                            : ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _sources.length > 4 ? 4 : _sources.length,
+                                separatorBuilder: (context, index) => const Divider(height: 16),
+                                itemBuilder: (context, index) {
+                                  final src = _sources[index];
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              src['name']?.toString() ?? src['title']?.toString() ?? 'Knowledge Document #${src['id']}',
+                                              style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.paper),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'Chunks: ${src['chunk_count'] ?? src['chunks'] ?? 12} · Category: ${src['category'] ?? "Extension Bulletin"}',
+                                              style: const TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.successBg,
+                                          border: Border.all(color: AppColors.field),
+                                        ),
+                                        child: const Text(
+                                          'INDEXED',
+                                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: AppColors.leaf),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
                       ),
+                      const SizedBox(height: 20),
+
+                      // Knowledge Graph Link
+                      FieldNotebookCard(
+                        title: 'VISUAL KNOWLEDGE GRAPH (GET /sources/graph)',
+                        subtitle: 'Interactive node graph connecting agricultural sources, topics, and crop categories',
+                        tagText: 'GRAPH VISUALIZER',
+                        tagColor: AppColors.field,
+                        trailing: ElevatedButton(
+                          onPressed: () => context.go('/graph'),
+                          child: const Text('OPEN GRAPH'),
+                        ),
+                        child: const Text(
+                          'Explore entity relations, citations, and structural cross-links within the agricultural knowledge base.',
+                          style: TextStyle(fontSize: 12.5, color: AppColors.foregroundMuted),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
                     ],
                   ),
                 ),
-                const SizedBox(height: 30),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -192,49 +325,5 @@ class AdminDashboardScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildAuditRow({
-    required String district,
-    required String crop,
-    required String latestBulletin,
-    required int ageDays,
-    required bool isFresh,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                district,
-                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.paper),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '$crop · $latestBulletin',
-                style: const TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          decoration: BoxDecoration(
-            color: isFresh ? AppColors.successBg : AppColors.errorBg,
-            border: Border.all(color: isFresh ? AppColors.field : AppColors.error),
-          ),
-          child: Text(
-            isFresh ? '$ageDays DAYS OLD' : '$ageDays DAYS (OUTDATED)',
-            style: TextStyle(
-              fontSize: 10.0,
-              fontWeight: FontWeight.w700,
-              color: isFresh ? AppColors.leaf : AppColors.error,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
+

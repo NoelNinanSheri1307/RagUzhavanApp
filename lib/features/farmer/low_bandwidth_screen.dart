@@ -6,7 +6,6 @@ import '../../core/localization/locale_notifier.dart';
 import '../../data/models/rag_query.dart';
 import '../../data/models/crop_context.dart';
 import '../../data/models/low_bandwidth_message.dart';
-import '../../data/repositories/rag_repository.dart';
 import '../../data/repositories/mock_rag_repository.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
@@ -21,7 +20,7 @@ class LowBandwidthScreen extends StatefulWidget {
 }
 
 class _LowBandwidthScreenState extends State<LowBandwidthScreen> {
-  final RagRepository _repository = MockRagRepository();
+  final MockRagRepository _repository = MockRagRepository();
   final _smsController = TextEditingController(
     text: 'Rice blast spray Budalur block Thanjavur Kuruvai paddy',
   );

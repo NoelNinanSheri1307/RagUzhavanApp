@@ -12,6 +12,7 @@ import '../../features/farmer/low_bandwidth_screen.dart';
 import '../../features/farmer/settings_screen.dart';
 import '../../features/admin/admin_dashboard_screen.dart';
 import '../../features/admin/admin_farmers_screen.dart';
+import '../../features/graph/knowledge_graph_screen.dart';
 
 class AppRouter {
   static GoRouter createRouter(AuthService authService) {
@@ -60,6 +61,10 @@ class AppRouter {
           builder: (context, state) => const RegisterScreen(),
         ),
         GoRoute(
+          path: '/graph',
+          builder: (context, state) => const KnowledgeGraphScreen(),
+        ),
+        GoRoute(
           path: '/farmer',
           builder: (context, state) => const FarmerDashboardScreen(),
           routes: [
@@ -70,8 +75,9 @@ class AppRouter {
             GoRoute(
               path: 'response',
               builder: (context, state) {
-                final scenario = state.uri.queryParameters['scenario'] ?? 'grounded';
-                return GroundedResponseScreen(scenarioKey: scenario);
+                final sessionIdStr = state.uri.queryParameters['sessionId'] ?? state.uri.queryParameters['session_id'];
+                final sessionId = int.tryParse(sessionIdStr ?? '');
+                return GroundedResponseScreen(sessionId: sessionId);
               },
             ),
             GoRoute(

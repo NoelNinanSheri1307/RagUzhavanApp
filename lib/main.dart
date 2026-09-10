@@ -6,7 +6,11 @@ import 'core/theme/app_theme.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/localization/locale_notifier.dart';
 import 'core/routing/app_router.dart';
+import 'data/services/api_service.dart';
 import 'data/services/auth_service.dart';
+import 'data/repositories/auth_repository.dart';
+import 'data/repositories/rag_repository.dart';
+import 'data/repositories/api_rag_repository.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +26,9 @@ class RagUzhavanApp extends StatefulWidget {
 
 class _RagUzhavanAppState extends State<RagUzhavanApp> {
   late final AppConfig _config;
+  late final ApiService _apiService;
+  late final ApiAuthRepository _authRepository;
+  late final ApiRagRepository _ragRepository;
   late final AuthService _authService;
   late final LocaleNotifier _localeNotifier;
 
@@ -29,7 +36,10 @@ class _RagUzhavanAppState extends State<RagUzhavanApp> {
   void initState() {
     super.initState();
     _config = const AppConfig();
-    _authService = AuthService();
+    _apiService = ApiService(baseUrl: _config.apiBaseUrl);
+    _authRepository = ApiAuthRepository(apiService: _apiService);
+    _ragRepository = ApiRagRepository(_apiService);
+    _authService = AuthService(authRepository: _authRepository);
     _localeNotifier = LocaleNotifier();
   }
 
@@ -38,6 +48,8 @@ class _RagUzhavanAppState extends State<RagUzhavanApp> {
     return MultiProvider(
       providers: [
         Provider<AppConfig>.value(value: _config),
+        Provider<ApiService>.value(value: _apiService),
+        Provider<RagRepository>.value(value: _ragRepository),
         ChangeNotifierProvider<AuthService>.value(value: _authService),
         ChangeNotifierProvider<LocaleNotifier>.value(value: _localeNotifier),
       ],

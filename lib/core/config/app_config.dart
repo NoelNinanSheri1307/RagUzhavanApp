@@ -5,7 +5,7 @@ class AppConfig {
   final String apiBaseUrl;
 
   const AppConfig({
-    this.apiBaseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: ''),
+    this.apiBaseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: 'https://backend-production-e510.up.railway.app'),
   });
 
   bool get isMockMode => apiBaseUrl.trim().isEmpty;

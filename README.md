@@ -82,17 +82,43 @@ The application UI relies strictly on the abstract `RagRepository` interface:
 
 ```dart
 abstract class RagRepository {
-  Future<RagResponse> askQuestion(RagQuery query);
-  Future<RagResponse> fetchPresetScenarioResponse(String scenarioKey, {String language = 'en'});
-  Future<List<Region>> fetchSupportedRegions();
-  Future<FieldSensorData> fetchFieldSensorData(String regionId);
-  Future<LowBandwidthMessage> sendLowBandwidthQuery(RagQuery query);
-  Future<List<Farmer>> fetchFarmersList();
+  Future<List<ChatSessionModel>> getSessions();
+  Future<ChatSessionModel?> createSession();
+  Future<List<ChatMessageModel>> getSessionMessages(int sessionId);
+  Future<bool> deleteSession(int sessionId);
+
+  Future<RagResponse> askQuestion({
+    required int sessionId,
+    required String question,
+    String mode = 'normal',
+    Map<String, dynamic>? sensors,
+  });
+
+  Future<List<Map<String, dynamic>>> getSourcesGraph();
+  Future<List<KnowledgeSourceModel>> getSources();
+  Future<bool> deleteSource(int sourceId);
+
+  Future<bool> getAdminSettings();
+  Future<bool> updateAdminSettings(bool enabled);
 }
 ```
 
-- **Mock Mode (Autonomous Frontend)**: Uses `MockRagRepository` to provide realistic agricultural data for Thanjavur, Coimbatore, Ramanathapuram, and Madurai districts.
-- **Production Mode**: Uses `ApiRagRepository` powered by `DioClient`. Changing `API_BASE_URL` at compile time or runtime seamlessly connects the frontend to the Railway RAG backend service.
+- **Mock Mode (Fallback / Disconnected)**: Uses `MockRagRepository` to provide deterministic local responses for testing offline UI flows.
+- **Production Mode (Live Railway Dio Hub)**: Uses `ApiRagRepository` connected directly to `https://backend-production-e510.up.railway.app`.
+
+### Backend API Integration Map (FastAPI on Railway)
+
+| Feature | HTTP Method | Endpoint | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Authentication** | `POST` | `/token` | OAuth2 form-urlencoded authentication token generation |
+| **Registration** | `POST` | `/register` | User profile registration |
+| **User Profile** | `GET / PATCH` | `/users/me` | Fetch & update current user profile (name, phone, district, crop) |
+| **Chat Sessions** | `GET / POST` | `/sessions` | List active sessions or instantiate new session |
+| **Session Messages**| `GET` | `/sessions/{id}/messages` | Retrieve session message history with reasoning & cited sources |
+| **RAG Query** | `POST` | `/sessions/{id}/ask` | Submit query in `normal`, `metrics`, or `sensor` operating mode |
+| **Knowledge Graph** | `GET` | `/sources/graph` | Fetch graph nodes & relationships for visual interactive map |
+| **Sources Corpus** | `GET / DELETE` | `/sources`, `/sources/{id}` | Manage ingested vector store document corpus |
+| **System Settings** | `GET / PATCH` | `/admin/settings` | Audit & toggle retrieval guardrails and evidence policy |
 
 ---
 
@@ -143,8 +169,8 @@ abstract class RagRepository {
    # Autonomous Frontend Mode (Default Mock Repository)
    flutter run
 
-   # Configured for Remote Railway Backend
-   flutter run --dart-define=API_BASE_URL=https://raguzhavan-backend.up.railway.app
+   # Configured for Remote Railway Production Backend
+   flutter run --dart-define=API_BASE_URL=https://backend-production-e510.up.railway.app
    ```
 
 ---

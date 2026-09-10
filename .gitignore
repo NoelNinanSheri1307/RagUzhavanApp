@@ -13,9 +13,11 @@ Thumbs.db
 .swiftpm/
 migrate_working_dir/
 
-# Environment and Credentials
+# Environment, Secrets & Local Overrides
 .env
 .env.*
+local.properties
+key.properties
 *.keystore
 *.jks
 *.p12
@@ -40,18 +42,24 @@ migrate_working_dir/
 /build/
 /coverage/
 
-# Symbolication & Obfuscation
-app.*.symbols
-app.*.map.json
-
-# Native Build Artifacts
+# Android Build & Gradle Artifacts
+.gradle/
 /android/app/debug
 /android/app/profile
 /android/app/release
+*.apk
+*.aab
+
+# iOS Build & Pods Artifacts
 /ios/Pods/
 /ios/Runner.xcworkspace/
 /ios/Runner.xcodeproj/project.xcworkspace/
 /ios/Flutter/Flutter.podspec
 /ios/Flutter/Generated.xcconfig
 /ios/Flutter/flutter_export_environment.sh
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
 

@@ -5,58 +5,76 @@ import '../../core/theme/app_colors.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/localization/locale_notifier.dart';
 import '../../core/services/speech_to_text_service.dart';
+import '../../data/repositories/rag_repository.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
 
 class AskQuestionScreen extends StatefulWidget {
-  const AskQuestionScreen({super.key});
+  final int? sessionId;
+
+  const AskQuestionScreen({super.key, this.sessionId});
 
   @override
   State<AskQuestionScreen> createState() => _AskQuestionScreenState();
 }
 
 class _AskQuestionScreenState extends State<AskQuestionScreen> {
-  final _queryController = TextEditingController(
-    text: 'Should I irrigate my paddy field this week in Budalur block?',
-  );
+  late final TextEditingController _queryController;
+  late final SpeechToTextService _sttService;
 
-  final SpeechToTextService _sttService = AppSpeechToTextService();
+  // Sensor Mode Input Controllers
+  final TextEditingController _waterLevelCtrl = TextEditingController(text: '5.2 cm');
+  final TextEditingController _tempCtrl = TextEditingController(text: '30.6 C');
+  final TextEditingController _humidityCtrl = TextEditingController(text: '82%');
+  final TextEditingController _soilMoistureCtrl = TextEditingController(text: '44.5%');
+  final TextEditingController _nitrogenCtrl = TextEditingController(text: '156 ppm');
+  final TextEditingController _phCtrl = TextEditingController(text: '6.8');
+  final TextEditingController _lightCtrl = TextEditingController(text: '32k lx');
+
   bool _isListening = false;
   String? _sttError;
-
-  String _district = 'Thanjavur';
-  String _block = 'Budalur';
-  String _selectedCrop = 'Paddy / Rice';
-  String _growthStage = 'Tillering Phase';
-  String _irrigationType = 'Canal-fed Alluvial';
-  String _season = 'Kuruvai (June-Sept)';
-  bool _isLowBandwidthMode = false;
   bool _isSubmitting = false;
+  String _selectedMode = 'normal'; // 'normal' | 'metrics' | 'sensor'
+  int? _currentSessionId;
 
-  final List<String> _presetQueries = const [
-    'Should I irrigate my paddy field this week in Budalur block?',
-    'What is the recommended fungicide treatment for rice blast in Thanjavur clay soil?',
-    'How to manage cotton bollworm attack in Thondamuthur block, Coimbatore?',
-    'Are there recent groundnut advisories for Kadaladi block in Ramanathapuram?',
-    'தஞ்சாவூர் பூதலூர் வட்டார நெல் குலை நோய் தடுப்பு மருந்துகள் யாவை?',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _queryController = TextEditingController();
+    _sttService = AppSpeechToTextService();
+    _currentSessionId = widget.sessionId;
+  }
+
+  @override
+  void dispose() {
+    _queryController.dispose();
+    _waterLevelCtrl.dispose();
+    _tempCtrl.dispose();
+    _humidityCtrl.dispose();
+    _soilMoistureCtrl.dispose();
+    _nitrogenCtrl.dispose();
+    _phCtrl.dispose();
+    _lightCtrl.dispose();
+    _sttService.stopListening();
+    super.dispose();
+  }
 
   Future<void> _toggleSpeechToText() async {
     final localeNotifier = Provider.of<LocaleNotifier>(context, listen: false);
-    final lang = localeNotifier.languageCode;
+    final isTamil = localeNotifier.languageCode == 'ta';
 
     if (_isListening) {
       await _sttService.stopListening();
-      setState(() {
-        _isListening = false;
-      });
+      setState(() => _isListening = false);
     } else {
       setState(() {
+        _isListening = true;
         _sttError = null;
       });
+
       await _sttService.startListening(
-        languageCode: lang,
+        languageCode: isTamil ? 'ta' : 'en',
         onResult: (text) {
           setState(() {
             _queryController.text = text;
@@ -69,9 +87,55 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
           });
         },
       );
-      setState(() {
-        _isListening = _sttService.isListening;
-      });
+    }
+  }
+
+  Future<void> _handleSubmit() async {
+    final text = _queryController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() => _isSubmitting = true);
+
+    final ragRepo = Provider.of<RagRepository>(context, listen: false);
+
+    try {
+      int activeSid = _currentSessionId ?? 0;
+      if (activeSid <= 0) {
+        final newSession = await ragRepo.createSession();
+        activeSid = newSession?.id ?? 1;
+      }
+
+      Map<String, dynamic>? sensorsPayload;
+      if (_selectedMode == 'sensor') {
+        sensorsPayload = {
+          'water_level': _waterLevelCtrl.text.trim(),
+          'temperature': _tempCtrl.text.trim(),
+          'humidity': _humidityCtrl.text.trim(),
+          'soil_moisture': _soilMoistureCtrl.text.trim(),
+          'nitrogen': _nitrogenCtrl.text.trim(),
+          'ph': _phCtrl.text.trim(),
+          'light': _lightCtrl.text.trim(),
+        };
+      }
+
+      final response = await ragRepo.askQuestion(
+        sessionId: activeSid,
+        question: text,
+        mode: _selectedMode,
+        sensors: sensorsPayload,
+      );
+
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        context.go('/farmer/response?session_id=$activeSid&msg_id=${response.id}');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _sttError = 'Failed to send query: $e';
+        });
+      }
     }
   }
 
@@ -96,13 +160,36 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FieldNotebookCard(
-                  title: 'AGRICULTURAL ENQUIRY FORM',
-                  subtitle: 'Specify natural-language question and field context parameters',
-                  tagText: 'RAG QUERY FORM',
+                  title: 'AGRICULTURAL RAG QUERY FORM',
+                  subtitle: 'Submit natural-language question directly to Railway backend vector pipeline',
+                  tagText: 'LIVE RAG QUERY',
                   tagColor: AppColors.straw,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Mode Selector Bar
+                      const Text(
+                        'SELECT RAG OPERATING MODE',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.straw,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _buildModeChip('normal', 'NORMAL', 'Standard RAG Search'),
+                          const SizedBox(width: 8),
+                          _buildModeChip('metrics', 'METRICS', 'Region Slot Clarification'),
+                          const SizedBox(width: 8),
+                          _buildModeChip('sensor', 'SENSOR', 'Telemetry Augmented'),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Question Header & Speech Button
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -125,12 +212,8 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                               decoration: BoxDecoration(
-                                color: _isListening
-                                    ? AppColors.errorBg
-                                    : AppColors.surfaceHighlight,
-                                border: Border.all(
-                                  color: _isListening ? AppColors.error : AppColors.straw,
-                                ),
+                                color: _isListening ? AppColors.errorBg : AppColors.surfaceHighlight,
+                                border: Border.all(color: _isListening ? AppColors.error : AppColors.straw),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -161,16 +244,20 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                         const SizedBox(height: 6),
                         Text(
                           _sttError!,
-                          style: const TextStyle(fontSize: 11.0, color: AppColors.foregroundMuted),
+                          style: const TextStyle(fontSize: 11.0, color: AppColors.error),
                         ),
                       ],
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
+
+                      // Natural Language Query Input
                       TextField(
                         controller: _queryController,
                         maxLines: 4,
                         style: const TextStyle(color: AppColors.foreground, fontSize: 14.0),
                         decoration: InputDecoration(
-                          hintText: l10n.text('questionPlaceholder'),
+                          hintText: isTamil
+                              ? 'உங்கள் விவசாயக் கேள்வியைக் குறிப்பிடவும் (எ.கா. பூதலூர் வட்டாரத்தில் நெல் குலை நோய்க்கு என்ன மருந்து தெளிக்க வேண்டும்?)'
+                              : 'Specify agricultural question (e.g. Should I apply fungicide for Leaf Blast in Budalur block?)',
                           hintStyle: const TextStyle(color: AppColors.foregroundSubtle, fontSize: 13.0),
                           fillColor: AppColors.surfaceHighlight,
                           filled: true,
@@ -178,171 +265,45 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      const Divider(),
-                      const SizedBox(height: 12),
-
-                      Text(
-                        l10n.text('fieldContextGroup').toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.foregroundSubtle,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isCompact = constraints.maxWidth < 500;
-
-                          Widget buildPair(Widget first, Widget second) {
-                            if (isCompact) {
-                              return Column(
-                                children: [
-                                  first,
-                                  const SizedBox(height: 12),
-                                  second,
-                                ],
-                              );
-                            }
-                            return Row(
-                              children: [
-                                Expanded(child: first),
-                                const SizedBox(width: 12),
-                                Expanded(child: second),
-                              ],
-                            );
-                          }
-
-                          return Column(
+                      // Sensor Mode Telemetry Controls (Shown only when sensor mode is active)
+                      if (_selectedMode == 'sensor') ...[
+                        Container(
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceHighlight,
+                            border: Border.all(color: AppColors.straw),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              buildPair(
-                                _buildParameterDropdown(
-                                  label: l10n.text('districtContext'),
-                                  value: _district,
-                                  items: const ['Thanjavur', 'Coimbatore', 'Ramanathapuram', 'Madurai', 'Omit District (Test Clarification)'],
-                                  onChanged: (val) => setState(() {
-                                    _district = val!;
-                                    if (_district == 'Coimbatore') _block = 'Thondamuthur';
-                                    if (_district == 'Ramanathapuram') _block = 'Kadaladi';
-                                    if (_district == 'Madurai') _block = 'Thiruparankundram';
-                                    if (_district == 'Thanjavur') _block = 'Budalur';
-                                    if (_district.contains('Omit')) _block = 'Omit Block';
-                                  }),
-                                ),
-                                _buildParameterDropdown(
-                                  label: l10n.text('blockContext'),
-                                  value: _block,
-                                  items: const ['Budalur', 'Thondamuthur', 'Kadaladi', 'Thiruparankundram', 'Omit Block'],
-                                  onChanged: (val) => setState(() => _block = val!),
-                                ),
+                              const Text(
+                                'TELEMETRY READINGS (SENT IN PAYLOAD TO RAG PIPELINE)',
+                                style: TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold, color: AppColors.straw),
                               ),
-                              const SizedBox(height: 12),
-                              buildPair(
-                                _buildParameterDropdown(
-                                  label: l10n.text('cropNameLabel'),
-                                  value: _selectedCrop,
-                                  items: const [
-                                    'Paddy / Rice',
-                                    'Cotton',
-                                    'Groundnut',
-                                    'Blackgram',
-                                  ],
-                                  onChanged: (val) => setState(() => _selectedCrop = val!),
-                                ),
-                                _buildParameterDropdown(
-                                  label: l10n.text('growthStageLabel'),
-                                  value: _growthStage,
-                                  items: const [
-                                    'Nursery Stage',
-                                    'Tillering Phase',
-                                    'Panicle Initiation',
-                                    'Grain Filling',
-                                  ],
-                                  onChanged: (val) => setState(() => _growthStage = val!),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              buildPair(
-                                _buildParameterDropdown(
-                                  label: l10n.text('irrigationLabel'),
-                                  value: _irrigationType,
-                                  items: const [
-                                    'Canal-fed Alluvial',
-                                    'Borewell / Tube well',
-                                    'Rainfed Dryland',
-                                    'Drip Fertigation',
-                                  ],
-                                  onChanged: (val) => setState(() => _irrigationType = val!),
-                                ),
-                                _buildParameterDropdown(
-                                  label: l10n.text('cropSeason'),
-                                  value: _season,
-                                  items: const [
-                                    'Kuruvai (June-Sept)',
-                                    'Samba (Aug-Jan)',
-                                    'Thaladi (Oct-Feb)',
-                                    'Navarai (Dec-May)',
-                                  ],
-                                  onChanged: (val) => setState(() => _season = val!),
-                                ),
+                              const SizedBox(height: 10),
+                              Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: [
+                                  _buildSensorField('Water Level', _waterLevelCtrl),
+                                  _buildSensorField('Temp (°C)', _tempCtrl),
+                                  _buildSensorField('Humidity (%)', _humidityCtrl),
+                                  _buildSensorField('Moisture (%)', _soilMoistureCtrl),
+                                  _buildSensorField('Nitrogen (ppm)', _nitrogenCtrl),
+                                  _buildSensorField('Soil pH', _phCtrl),
+                                  _buildSensorField('Light (lx)', _lightCtrl),
+                                ],
                               ),
                             ],
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceHighlight,
-                          border: Border.all(color: AppColors.border),
+                          ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.cell_tower, color: AppColors.straw, size: 18),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          l10n.text('lowBandwidthHeader'),
-                                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.paper),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        Text(
-                                          isTamil ? '2G குறுஞ்செய்தி வழி சுருக்கப்பட்ட தரவு (50 KB Max)' : 'Compress payload for 2G / SMS transmission (50 KB Limit)',
-                                          style: const TextStyle(fontSize: 10.5, color: AppColors.foregroundSubtle),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Switch(
-                              value: _isLowBandwidthMode,
-                              activeThumbColor: AppColors.straw,
-                              onChanged: (val) => setState(() => _isLowBandwidthMode = val),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                        const SizedBox(height: 16),
+                      ],
 
+                      // Submit Button
                       SizedBox(
                         width: double.infinity,
+                        height: 48,
                         child: ElevatedButton(
                           onPressed: _isSubmitting ? null : _handleSubmit,
                           child: _isSubmitting
@@ -363,9 +324,8 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                                   children: [
                                     Flexible(
                                       child: Text(
-                                        l10n.text('askQuestion'),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                        l10n.text('askQuestion').toUpperCase(),
+                                        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.8),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -377,41 +337,6 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                FieldNotebookCard(
-                  title: l10n.text('presetQueries'),
-                  subtitle: 'Tap to load sample regional questions',
-                  tagText: 'PRESETS',
-                  tagColor: AppColors.field,
-                  child: Column(
-                    children: _presetQueries.map((query) {
-                      return InkWell(
-                        onTap: () {
-                          setState(() {
-                            _queryController.text = query;
-                          });
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.subdirectory_arrow_right, color: AppColors.straw, size: 16),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  query,
-                                  style: const TextStyle(fontSize: 12.5, color: AppColors.paper),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 30),
               ],
             ),
           ),
@@ -420,53 +345,47 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
     );
   }
 
-  Widget _buildParameterDropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(fontSize: 10.0, fontWeight: FontWeight.w600, color: AppColors.foregroundMuted),
+  Widget _buildModeChip(String modeKey, String label, String tooltip) {
+    final isSelected = _selectedMode == modeKey;
+    return Expanded(
+      child: Tooltip(
+        message: tooltip,
+        child: ChoiceChip(
+          label: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? AppColors.background : AppColors.foreground,
+              ),
+            ),
+          ),
+          selected: isSelected,
+          selectedColor: AppColors.straw,
+          backgroundColor: AppColors.surfaceHighlight,
+          shape: const RoundedRectangleBorder(side: BorderSide(color: AppColors.border)),
+          onSelected: (val) => setState(() => _selectedMode = modeKey),
         ),
-        const SizedBox(height: 4),
-        DropdownButtonFormField<String>(
-          initialValue: value,
-          dropdownColor: AppColors.surfaceElevated,
-          isExpanded: true,
-          style: const TextStyle(fontSize: 12.5, color: AppColors.foreground),
-          items: items.map((item) {
-            return DropdownMenuItem(value: item, child: Text(item, overflow: TextOverflow.ellipsis));
-          }).toList(),
-          onChanged: onChanged,
-        ),
-      ],
+      ),
     );
   }
 
-  Future<void> _handleSubmit() async {
-    setState(() => _isSubmitting = true);
-    final text = _queryController.text.toLowerCase();
-
-    String scenario = 'grounded';
-    if (_district.contains('Omit') || _block.contains('Omit') || text.contains('clarify location')) {
-      scenario = 'clarification_location';
-    } else if (_district == 'Ramanathapuram' || _block == 'Kadaladi' || text.contains('kadaladi')) {
-      scenario = 'no_data';
-    } else if (_selectedCrop.contains('Cotton') || text.contains('cotton')) {
-      scenario = 'clarification_cotton';
-    } else if (text.contains('தமிழ்') || text.contains('நெல்')) {
-      scenario = 'tamil_grounded';
-    }
-
-    if (_isLowBandwidthMode) {
-      context.go('/farmer/low-bandwidth');
-    } else {
-      context.go('/farmer/response?scenario=$scenario');
-    }
+  Widget _buildSensorField(String label, TextEditingController ctrl) {
+    return SizedBox(
+      width: 110,
+      child: TextField(
+        controller: ctrl,
+        style: const TextStyle(fontSize: 12.0, color: AppColors.paper, fontFamily: 'monospace'),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(fontSize: 10.0, color: AppColors.foregroundSubtle),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          filled: true,
+          fillColor: AppColors.surface,
+          border: const OutlineInputBorder(),
+        ),
+      ),
+    );
   }
 }

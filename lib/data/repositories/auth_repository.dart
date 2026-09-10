@@ -144,7 +144,7 @@ class ApiAuthRepository implements AuthRepository {
   }) : mockFallback = mockFallback ?? MockAuthRepository();
 
   @override
-  AuthUser? get currentUser => apiService.hasBaseUrl ? _currentUser : mockFallback.currentUser;
+  AuthUser? get currentUser => apiService.hasBaseUrl ? (_currentUser ?? mockFallback.currentUser) : mockFallback.currentUser;
 
   @override
   bool get isAuthenticated => currentUser != null;
@@ -164,24 +164,44 @@ class ApiAuthRepository implements AuthRepository {
     }
 
     try {
-      final res = await apiService.login(
+      final tokenRes = await apiService.login(
         username: phoneOrUsername,
         password: password,
         role: role.name,
       );
-      if (res != null) {
-        final farmerData = res['farmer'] as Map<String, dynamic>?;
+
+      if (tokenRes != null) {
+        // Fetch user info from GET /users/me
+        final userMe = await apiService.getCurrentUser();
+        final serverRole = (userMe?['role'] == 'admin') ? AuthRole.admin : role;
+        
+        final farmer = Farmer(
+          id: 'USER-${userMe?['username'] ?? '101'}',
+          name: userMe?['full_name'] as String? ?? userMe?['username'] as String? ?? phoneOrUsername,
+          phone: userMe?['phone'] as String? ?? phoneOrUsername,
+          district: userMe?['district'] as String? ?? 'Thanjavur',
+          block: 'Budalur',
+          state: userMe?['state'] as String? ?? 'Tamil Nadu',
+          preferredLanguage: 'ta',
+          crops: [userMe?['primary_crop'] as String? ?? 'Paddy / Rice'],
+          landSizeAcres: 3.5,
+          agroZone: 'Cauvery Delta Zone',
+          season: 'Kuruvai',
+          accountStatus: 'Active',
+          lastActivity: DateTime.now(),
+        );
+
         _currentUser = AuthUser(
-          id: res['id'] as String? ?? 'USER-101',
-          name: res['name'] as String? ?? phoneOrUsername,
-          phone: phoneOrUsername,
-          role: role,
-          farmer: farmerData != null ? Farmer.fromJson(farmerData) : null,
+          id: farmer.id,
+          name: farmer.name,
+          phone: farmer.phone,
+          role: serverRole,
+          farmer: farmer,
         );
         return _currentUser;
       }
     } catch (_) {
-      // Graceful fallback to mock repository on error
+      // Fallback on network or auth error
       return mockFallback.login(
         phoneOrUsername: phoneOrUsername,
         password: password,
@@ -198,17 +218,18 @@ class ApiAuthRepository implements AuthRepository {
     }
 
     try {
-      final res = await apiService.register(farmer.toJson());
-      if (res != null) {
-        _currentUser = AuthUser(
-          id: res['id'] as String? ?? farmer.id,
-          name: farmer.name,
-          phone: farmer.phone,
-          role: AuthRole.farmer,
-          farmer: farmer,
-        );
-        return _currentUser!;
-      }
+      await apiService.register(
+        username: farmer.phone.replaceAll(RegExp(r'\s+'), ''),
+        password: 'password123',
+        role: 'student',
+      );
+      // Auto login after register
+      final loggedIn = await login(
+        phoneOrUsername: farmer.phone.replaceAll(RegExp(r'\s+'), ''),
+        password: 'password123',
+        role: AuthRole.farmer,
+      );
+      if (loggedIn != null) return loggedIn;
     } catch (_) {
       return mockFallback.registerFarmer(farmer);
     }
@@ -217,6 +238,7 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {
+    apiService.setAuthToken(null);
     _currentUser = null;
     await mockFallback.logout();
   }

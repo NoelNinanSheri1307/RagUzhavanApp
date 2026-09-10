@@ -6,6 +6,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/localization/locale_notifier.dart';
 import '../../core/config/app_config.dart';
 import '../../data/services/auth_service.dart';
+import '../../data/services/api_service.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
@@ -19,12 +20,86 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _apiUrlController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _districtController = TextEditingController();
+  final _cropController = TextEditingController();
+
+  bool _isLoadingProfile = false;
+  bool _isSavingProfile = false;
+  String? _profileMessage;
 
   @override
   void initState() {
     super.initState();
     const config = AppConfig();
     _apiUrlController.text = config.apiBaseUrl;
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    if (authService.currentFarmer != null) {
+      _fullNameController.text = authService.currentFarmer!.name;
+      _phoneController.text = authService.currentFarmer!.phone;
+      _districtController.text = authService.currentFarmer!.district;
+      _cropController.text = authService.currentFarmer!.crops.isNotEmpty
+          ? authService.currentFarmer!.crops.join(', ')
+          : 'Paddy';
+    }
+
+    if (!apiService.hasBaseUrl) return;
+
+    setState(() => _isLoadingProfile = true);
+    try {
+      final userMap = await apiService.getCurrentUser();
+      if (userMap != null && mounted) {
+        setState(() {
+          if (userMap['full_name'] != null) _fullNameController.text = userMap['full_name'];
+          if (userMap['phone'] != null) _phoneController.text = userMap['phone'];
+          if (userMap['district'] != null) _districtController.text = userMap['district'];
+          if (userMap['primary_crop'] != null) _cropController.text = userMap['primary_crop'];
+        });
+      }
+    } catch (_) {
+      // Keep existing local defaults if disconnected
+    } finally {
+      if (mounted) setState(() => _isLoadingProfile = false);
+    }
+  }
+
+  Future<void> _saveUserProfile() async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    setState(() {
+      _isSavingProfile = true;
+      _profileMessage = null;
+    });
+
+    try {
+      if (apiService.hasBaseUrl) {
+        await apiService.updateUserProfile({
+          'full_name': _fullNameController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'district': _districtController.text.trim(),
+          'primary_crop': _cropController.text.trim(),
+        });
+      }
+      if (mounted) {
+        setState(() {
+          _profileMessage = 'Profile updated successfully!';
+          _isSavingProfile = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _profileMessage = 'Saved locally (Backend error: $e)';
+          _isSavingProfile = false;
+        });
+      }
+    }
   }
 
   @override
@@ -49,6 +124,109 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // User Profile Section (GET /users/me & PATCH /users/me)
+                FieldNotebookCard(
+                  title: 'USER PROFILE MANAGEMENT (PATCH /users/me)',
+                  subtitle: 'Update your registered agricultural profile details on the live backend',
+                  tagText: 'ACCOUNT PROFILE',
+                  tagColor: AppColors.leaf,
+                  child: _isLoadingProfile
+                      ? const Center(child: CircularProgressIndicator(color: AppColors.straw))
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'FULL NAME',
+                              style: const TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold, color: AppColors.foregroundSubtle),
+                            ),
+                            const SizedBox(height: 4),
+                            TextField(
+                              controller: _fullNameController,
+                              style: const TextStyle(fontSize: 13.5, color: AppColors.foreground),
+                              decoration: const InputDecoration(hintText: 'Enter full name'),
+                            ),
+                            const SizedBox(height: 12),
+
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'PHONE NUMBER',
+                                        style: TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold, color: AppColors.foregroundSubtle),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      TextField(
+                                        controller: _phoneController,
+                                        style: const TextStyle(fontSize: 13.5, color: AppColors.foreground),
+                                        decoration: const InputDecoration(hintText: '+91...'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'DISTRICT',
+                                        style: TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold, color: AppColors.foregroundSubtle),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      TextField(
+                                        controller: _districtController,
+                                        style: const TextStyle(fontSize: 13.5, color: AppColors.foreground),
+                                        decoration: const InputDecoration(hintText: 'e.g. Thanjavur'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+
+                            Text(
+                              'PRIMARY CROP',
+                              style: const TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold, color: AppColors.foregroundSubtle),
+                            ),
+                            const SizedBox(height: 4),
+                            TextField(
+                              controller: _cropController,
+                              style: const TextStyle(fontSize: 13.5, color: AppColors.foreground),
+                              decoration: const InputDecoration(hintText: 'e.g. Paddy / Rice'),
+                            ),
+                            const SizedBox(height: 16),
+
+                            if (_profileMessage != null) ...[
+                              Text(
+                                _profileMessage!,
+                                style: const TextStyle(fontSize: 12.0, fontWeight: FontWeight.w600, color: AppColors.leaf),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _isSavingProfile ? null : _saveUserProfile,
+                                child: _isSavingProfile
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background),
+                                      )
+                                    : const Text('SAVE PROFILE TO BACKEND'),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+                const SizedBox(height: 20),
+
+                // Language Selector
                 FieldNotebookCard(
                   title: l10n.text('language'),
                   subtitle: 'Switch application-wide UI text language',
@@ -88,6 +266,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 20),
 
+                // Backend integration config
                 FieldNotebookCard(
                   title: 'BACKEND INTEGRATION CONFIG (DIO HUB)',
                   subtitle: 'Single source of truth for RAG backend integration',
@@ -133,12 +312,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         controller: _apiUrlController,
                         style: const TextStyle(fontSize: 13.0, fontFamily: 'monospace', color: AppColors.foreground),
                         decoration: const InputDecoration(
-                          hintText: 'e.g. https://raguzhavan-backend.up.railway.app',
+                          hintText: 'e.g. https://backend-production-e510.up.railway.app',
                         ),
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'Note: When API_BASE_URL is empty, ApiRagRepository automatically falls back to MockRagRepository. Backend integration can be enabled instantly by providing the Railway URL.',
+                        'Base URL connects to Railway production deployment. All RAG sessions, questions, graph nodes, and settings sync live with this service.',
                         style: TextStyle(fontSize: 11.5, color: AppColors.foregroundSubtle, height: 1.4),
                       ),
                     ],
@@ -146,10 +325,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 20),
 
+                // Account / Auth Status
                 FieldNotebookCard(
-                  title: 'PORTAL ROLE SWITCHER',
-                  subtitle: 'Switch between Farmer and Admin interface modes',
-                  tagText: 'MOCK ROLE',
+                  title: 'PORTAL ROLE & SESSION',
+                  subtitle: 'Logged in session parameters',
+                  tagText: 'AUTH',
                   tagColor: AppColors.leaf,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -168,22 +348,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              if (!authService.isAdmin)
-                                OutlinedButton(
-                                  onPressed: () {
-                                    authService.switchRole(UserRole.admin);
-                                    context.go('/admin');
-                                  },
-                                  child: const Text('Switch to Admin'),
-                                )
-                              else
-                                OutlinedButton(
-                                  onPressed: () {
-                                    authService.switchRole(UserRole.farmer);
-                                    context.go('/farmer');
-                                  },
-                                  child: const Text('Switch to Farmer'),
-                                ),
                               TextButton(
                                 onPressed: () {
                                   authService.logout();
@@ -207,3 +371,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+

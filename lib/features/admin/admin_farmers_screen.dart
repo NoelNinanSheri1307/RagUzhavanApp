@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/localization/app_localizations.dart';
-import '../../data/models/farmer.dart';
-import '../../data/repositories/rag_repository.dart';
-import '../../data/repositories/mock_rag_repository.dart';
-import '../../core/config/app_config.dart';
+import '../../data/services/api_service.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
 import '../../shared/widgets/field_notebook_card.dart';
-import '../../shared/widgets/api_status_badge.dart';
 
 class AdminFarmersScreen extends StatefulWidget {
   const AdminFarmersScreen({super.key});
@@ -21,69 +16,85 @@ class AdminFarmersScreen extends StatefulWidget {
 }
 
 class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
-  final RagRepository _repository = MockRagRepository();
-  List<Farmer> _allFarmers = [];
+  List<dynamic> _sources = [];
   bool _isLoading = true;
-  bool _showTestRoster = false;
-
-  // Filters
-  String _selectedDistrict = 'All';
-  String _selectedCrop = 'All';
-  String _selectedStatus = 'All';
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadFarmers();
+    _loadSources();
   }
 
-  Future<void> _loadFarmers() async {
-    final list = await _repository.fetchFarmersList();
-    if (mounted) {
-      setState(() {
-        _allFarmers = list;
-        _isLoading = false;
-      });
+  Future<void> _loadSources() async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    setState(() => _isLoading = true);
+
+    try {
+      final list = await apiService.getSources();
+      if (mounted) {
+        setState(() {
+          _sources = list ?? [];
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to load sources from Railway backend: $e';
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  List<Farmer> get _filteredFarmers {
-    return _allFarmers.where((farmer) {
-      if (_selectedDistrict != 'All' && !farmer.district.contains(_selectedDistrict)) {
-        return false;
+  Future<void> _deleteSource(int id, String name) async {
+    final apiService = Provider.of<ApiService>(context, listen: false);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceElevated,
+        title: const Text('Delete Source Document?', style: TextStyle(color: AppColors.paper)),
+        content: Text('Are you sure you want to remove "$name" from Chroma DB vector store?', style: const TextStyle(color: AppColors.foregroundMuted)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('CANCEL'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('DELETE'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await apiService.deleteSource(id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Document "$name" removed successfully.'), backgroundColor: AppColors.leaf),
+          );
+          _loadSources();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete document: $e'), backgroundColor: AppColors.error),
+          );
+        }
       }
-      if (_selectedCrop != 'All' && !farmer.crops.any((c) => c.toLowerCase().contains(_selectedCrop.toLowerCase()))) {
-        return false;
-      }
-      if (_selectedStatus != 'All' && farmer.accountStatus != _selectedStatus) {
-        return false;
-      }
-      return true;
-    }).toList();
+    }
   }
-
-  List<String> get _districtsList {
-    final dists = _allFarmers.map((f) => f.district).toSet().toList();
-    dists.sort();
-    return ['All', ...dists];
-  }
-
-  List<String> get _cropsList => ['All', 'Paddy / Rice', 'Cotton', 'Groundnut', 'Pulses', 'Sugarcane', 'Blackgram', 'Chilli', 'Jasmine'];
-
-  List<String> get _statusList => ['All', 'Active', 'Pending Review', 'Flagged'];
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final filtered = _filteredFarmers;
-
     return Scaffold(
       appBar: EditorialHeader(
-        title: l10n.text('navFarmers'),
-        subtitle: 'District Farmer Roster & Regional Status Inspection',
+        title: 'KNOWLEDGE BASE SOURCES',
+        subtitle: 'Ingested Document Corpus & Chroma Vector Indexing Manager',
         showBackButton: true,
         onBack: () => context.go('/admin'),
       ),
@@ -94,16 +105,15 @@ class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 950),
+                  constraints: const BoxConstraints(maxWidth: 900),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Environment & Status Indicator
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'ADMINISTRATIVE REGION ROSTER',
+                          const Text(
+                            'VECTOR STORE DOCUMENT CORPUS',
                             style: TextStyle(
                               fontFamily: 'monospace',
                               fontSize: 11.0,
@@ -112,184 +122,98 @@ class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
                               letterSpacing: 1.0,
                             ),
                           ),
-                          ApiStatusBadge(baseUrl: ''),
+                          IconButton(
+                            icon: const Icon(Icons.refresh, color: AppColors.straw),
+                            onPressed: _loadSources,
+                            tooltip: 'Refresh Corpus',
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
 
-                      // Scientific Filter Toolbar
-                      Container(
-                        padding: const EdgeInsets.all(14.0),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceElevated : AppColors.lightSurface,
-                          border: Border.all(color: isDark ? AppColors.border : AppColors.lightBorder),
+                      if (_errorMessage != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.errorBg,
+                            border: Border.all(color: AppColors.error),
+                          ),
+                          child: Text(_errorMessage!, style: const TextStyle(fontSize: 12, color: AppColors.paper)),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: const [
-                                Icon(Icons.filter_alt_outlined, size: 16, color: AppColors.straw),
-                                SizedBox(width: 6),
-                                Text(
-                                  'ROSTER FILTERS',
-                                  style: TextStyle(
-                                    fontSize: 10.0,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'monospace',
-                                    color: AppColors.straw,
-                                    letterSpacing: 0.8,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final isCompact = constraints.maxWidth < 600;
-                                return isCompact
-                                    ? Column(
-                                        children: [
-                                          _buildFilterDropdown(
-                                            label: 'District',
-                                            value: _selectedDistrict,
-                                            items: _districtsList,
-                                            onChanged: (val) => setState(() => _selectedDistrict = val!),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          _buildFilterDropdown(
-                                            label: 'Crop',
-                                            value: _selectedCrop,
-                                            items: _cropsList,
-                                            onChanged: (val) => setState(() => _selectedCrop = val!),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          _buildFilterDropdown(
-                                            label: 'Status',
-                                            value: _selectedStatus,
-                                            items: _statusList,
-                                            onChanged: (val) => setState(() => _selectedStatus = val!),
-                                          ),
-                                        ],
-                                      )
-                                    : Row(
-                                        children: [
-                                          Expanded(
-                                            child: _buildFilterDropdown(
-                                              label: 'District',
-                                              value: _selectedDistrict,
-                                              items: _districtsList,
-                                              onChanged: (val) => setState(() => _selectedDistrict = val!),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: _buildFilterDropdown(
-                                              label: 'Crop',
-                                              value: _selectedCrop,
-                                              items: _cropsList,
-                                              onChanged: (val) => setState(() => _selectedCrop = val!),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: _buildFilterDropdown(
-                                              label: 'Status',
-                                              value: _selectedStatus,
-                                              items: _statusList,
-                                              onChanged: (val) => setState(() => _selectedStatus = val!),
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                        const SizedBox(height: 16),
+                      ],
 
-                      // Main Roster Table Card
                       FieldNotebookCard(
-                        title: 'ENROLLED FARMER DIRECTORY',
-                        subtitle: 'Calm regional table with verified account status and activity logs',
-                        tagText: const AppConfig().isMockMode ? 'MOCK / DISCONNECTED MODE' : '${filtered.length} OF ${_allFarmers.length} RECORDS',
+                        title: 'INGESTED DOCUMENT CORPUS (${_sources.length})',
+                        subtitle: 'Chroma DB collection documents powering grounded RAG recommendations',
+                        tagText: 'GET /sources',
                         tagColor: AppColors.straw,
-                        child: (const AppConfig().isMockMode && !_showTestRoster)
-                            ? Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 24.0),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(14.0),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.warningBg,
-                                        border: Border.all(color: AppColors.straw),
-                                      ),
-                                      child: const Row(
-                                        children: [
-                                          Icon(Icons.cloud_off_outlined, color: AppColors.straw, size: 20),
-                                          SizedBox(width: 10),
-                                          Expanded(
-                                            child: Text(
-                                              'AUTONOMOUS FRONTEND MODE: Backend is currently not connected. Enrolled farmer directory will populate from GET /farmers when API_BASE_URL is set in Settings.',
-                                              style: TextStyle(fontSize: 12.0, color: AppColors.paper, height: 1.4),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    OutlinedButton(
-                                      onPressed: () => setState(() => _showTestRoster = true),
-                                      style: OutlinedButton.styleFrom(
-                                        side: const BorderSide(color: AppColors.straw),
-                                        foregroundColor: AppColors.straw,
-                                      ),
-                                      child: const Text('LOAD DEVELOPMENT MOCK ROSTER FOR LAYOUT AUDIT'),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : filtered.isEmpty
-                            ? Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 40.0),
+                        child: _sources.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 30),
                                 child: Center(
-                                  child: Column(
-                                    children: [
-                                      const Icon(Icons.search_off_outlined, size: 36, color: AppColors.foregroundSubtle),
-                                      const SizedBox(height: 12),
-                                      const Text(
-                                        'No farmer records match the selected district, crop, or status filter.',
-                                        style: TextStyle(fontSize: 13, color: AppColors.foregroundMuted),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      OutlinedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            _selectedDistrict = 'All';
-                                            _selectedCrop = 'All';
-                                            _selectedStatus = 'All';
-                                          });
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          side: const BorderSide(color: AppColors.straw),
-                                          foregroundColor: AppColors.straw,
-                                        ),
-                                        child: const Text('RESET ALL FILTERS'),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    'No knowledge documents ingested in the backend.',
+                                    style: TextStyle(fontSize: 13, color: AppColors.foregroundMuted),
                                   ),
                                 ),
                               )
                             : ListView.separated(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                itemCount: filtered.length,
+                                itemCount: _sources.length,
                                 separatorBuilder: (context, index) => const Divider(height: 24, thickness: 1),
                                 itemBuilder: (context, index) {
-                                  final farmer = filtered[index];
-                                  return _buildScientificRow(farmer, isDark);
+                                  final src = _sources[index];
+                                  final id = src['id'] is int ? src['id'] as int : int.tryParse(src['id']?.toString() ?? '0') ?? 0;
+                                  final name = src['name']?.toString() ?? src['title']?.toString() ?? 'Knowledge Document #$id';
+                                  final chunkCount = src['chunk_count'] ?? src['chunks'] ?? 12;
+                                  final category = src['category']?.toString() ?? 'Extension Bulletin';
+
+                                  return Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceHighlight,
+                                          border: Border.all(color: AppColors.straw),
+                                        ),
+                                        child: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.straw, size: 22),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              name,
+                                              style: const TextStyle(
+                                                fontFamily: AppTheme.fontFootlight,
+                                                fontSize: 17.0,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.foreground,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'ID: $id · Chunks: $chunkCount · Category: $category',
+                                              style: const TextStyle(
+                                                fontSize: 11.5,
+                                                fontFamily: 'monospace',
+                                                color: AppColors.foregroundSubtle,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                                        onPressed: () => _deleteSource(id, name),
+                                        tooltip: 'DELETE /sources/$id',
+                                      ),
+                                    ],
+                                  );
                                 },
                               ),
                       ),
@@ -301,202 +225,5 @@ class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
             ),
     );
   }
-
-  Widget _buildFilterDropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 9.0,
-            fontFamily: 'monospace',
-            color: AppColors.foregroundSubtle,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            color: AppColors.surface,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              isExpanded: true,
-              dropdownColor: AppColors.surfaceElevated,
-              style: const TextStyle(fontSize: 12.5, color: AppColors.foreground),
-              items: items.map((item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
-              onChanged: onChanged,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildScientificRow(Farmer farmer, bool isDark) {
-    Color statusColor;
-    Color statusBg;
-
-    switch (farmer.accountStatus) {
-      case 'Active':
-        statusColor = AppColors.accentGreen;
-        statusBg = AppColors.accentGreen.withValues(alpha: 0.12);
-        break;
-      case 'Pending Review':
-        statusColor = AppColors.warningText;
-        statusBg = AppColors.warningText.withValues(alpha: 0.12);
-        break;
-      case 'Flagged':
-      default:
-        statusColor = const Color(0xFFD9534F);
-        statusBg = const Color(0xFFD9534F).withValues(alpha: 0.12);
-        break;
-    }
-
-    final timeAgo = _formatTimeAgo(farmer.lastActivity);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Farmer Name & Contact
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    farmer.name,
-                    style: const TextStyle(
-                      fontFamily: AppTheme.fontFootlight,
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.foreground,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Phone: ${farmer.phone} · ID: ${farmer.id}',
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      fontFamily: 'monospace',
-                      color: AppColors.foregroundSubtle,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Account Status Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: statusBg,
-                border: Border.all(color: statusColor.withValues(alpha: 0.6)),
-              ),
-              child: Text(
-                farmer.accountStatus.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 10.0,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
-                  color: statusColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-
-        // Region Scope & Crops Grid
-        Wrap(
-          spacing: 16,
-          runSpacing: 8,
-          children: [
-            _buildDetailChip(
-              icon: Icons.location_on_outlined,
-              label: 'REGION SCOPE',
-              value: '${farmer.district} · ${farmer.block} block',
-            ),
-            _buildDetailChip(
-              icon: Icons.grass_outlined,
-              label: 'CROPS & SEASON',
-              value: '${farmer.crops.join(', ')} (${farmer.season})',
-            ),
-            _buildDetailChip(
-              icon: Icons.landscape_outlined,
-              label: 'LAND HOLDING',
-              value: '${farmer.landSizeAcres} Acres (${farmer.agroZone})',
-            ),
-            _buildDetailChip(
-              icon: Icons.access_time_outlined,
-              label: 'LATEST ACTIVITY',
-              value: timeAgo,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailChip({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: AppColors.straw),
-        const SizedBox(width: 6),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 8.5,
-                fontFamily: 'monospace',
-                color: AppColors.foregroundSubtle,
-              ),
-            ),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 12.0,
-                fontWeight: FontWeight.w600,
-                color: AppColors.foregroundMuted,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  String _formatTimeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60) {
-      return '${diff.inMinutes} mins ago';
-    } else if (diff.inHours < 24) {
-      return '${diff.inHours} hrs ago';
-    } else {
-      return '${diff.inDays} days ago (${DateFormat('MMM d').format(dt)})';
-    }
-  }
 }
+

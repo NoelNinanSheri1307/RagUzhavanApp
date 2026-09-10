@@ -6,7 +6,6 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/localization/locale_notifier.dart';
 import '../../data/models/region.dart';
 import '../../data/models/field_sensor_data.dart';
-import '../../data/repositories/rag_repository.dart';
 import '../../data/repositories/mock_rag_repository.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/editorial_nav_bar.dart';
@@ -21,7 +20,7 @@ class RegionSelectorScreen extends StatefulWidget {
 }
 
 class _RegionSelectorScreenState extends State<RegionSelectorScreen> {
-  final RagRepository _repository = MockRagRepository();
+  final MockRagRepository _repository = MockRagRepository();
   List<Region> _regions = [];
   Region? _selectedRegion;
   FieldSensorData? _sensorData;

@@ -95,77 +95,47 @@ class ApiRagRepository implements RagRepository {
         final reasoning = res['reasoning'] as String? ?? 'Context-grounded vector store retrieval.';
         final rawSources = res['sources'] as List<dynamic>?;
         final isTamil = question.contains(RegExp(r'[\u0B80-\u0BFF]'));
+        final district = res['district'] as String? ?? res['district_name'] as String? ?? 'Active Region';
+        final block = res['block'] as String? ?? res['block_name'] as String? ?? 'Active Block';
 
-        // Check for missing slot / telemetry clarification response
-        if (answer.toLowerCase().contains('need your district') ||
-            answer.toLowerCase().contains('missing parameters') ||
-            answer.toLowerCase().contains('specify crop') ||
-            answer.toLowerCase().contains('clarification needed') ||
-            answer.toLowerCase().contains('telemetry')) {
+        // Check for no data / ungrounded notice from backend
+        if (answer.isEmpty ||
+            answer.contains('no local data') ||
+            answer.contains('indexed sources don’t cover') ||
+            answer.contains('no matching data') ||
+            answer.contains('no relevant data')) {
+          final noDataText = isTamil
+              ? 'உங்கள் இருப்பிடத்திற்கான தரவு எதுவும் இல்லை.'
+              : 'No current data for your location / block.';
           return RagResponse(
             id: 'RESP-${DateTime.now().millisecondsSinceEpoch}',
             queryId: 'QRY-${DateTime.now().millisecondsSinceEpoch}',
-            responseText: answer,
-            responseTextTamil: answer,
-            recommendationSummary: answer,
-            recommendationSummaryTamil: answer,
-            whatToDo: 'Specify missing district or crop parameters in the form.',
-            whatToDoTamil: 'விவரங்களை படிவத்தில் குறிப்பிடவும்.',
+            responseText: noDataText,
+            responseTextTamil: noDataText,
+            recommendationSummary: noDataText,
+            recommendationSummaryTamil: noDataText,
+            whatToDo: 'No data available for submitted location / query.',
+            whatToDoTamil: 'சமர்ப்பிக்கப்பட்ட கேள்விக்குத் தரவு எதுவும் இல்லை.',
             whenToApply: 'N/A',
             whenToApplyTamil: 'பொருந்தாது',
             howMuchAmount: 'N/A',
             howMuchAmountTamil: 'பொருந்தாது',
-            whyReason: answer,
-            whyReasonTamil: answer,
-            groundingScore: 0.85,
-            ruleId: 'RULE-CLARIFICATION-01',
-            citedProvenance: 'TNAU District Extension Advisory Bulletin 2025',
-            language: isTamil ? 'ta' : 'en',
-            isGrounded: false,
-            evidenceSources: const [],
-            clarificationQuestions: const [],
-            timestamp: DateTime.now(),
-            status: ResponseStatus.clarificationNeeded,
-            districtName: 'Thanjavur',
-            blockName: 'Budalur',
-            cropName: 'Paddy / Rice',
-            growthStage: 'Tillering',
-            season: 'Kuruvai',
-            averageDataAgeDays: 14,
-          );
-        }
-
-        // Check for no data notice
-        if (answer.contains('no local data') || answer.contains('indexed sources don’t cover')) {
-          return RagResponse(
-            id: 'RESP-${DateTime.now().millisecondsSinceEpoch}',
-            queryId: 'QRY-${DateTime.now().millisecondsSinceEpoch}',
-            responseText: answer,
-            responseTextTamil: answer,
-            recommendationSummary: answer,
-            recommendationSummaryTamil: answer,
-            whatToDo: 'Consult local extension officer.',
-            whatToDoTamil: 'விவசாய அதிகாரியை அணுகவும்.',
-            whenToApply: 'N/A',
-            whenToApplyTamil: 'பொருந்தாது',
-            howMuchAmount: 'N/A',
-            howMuchAmountTamil: 'பொருந்தாது',
-            whyReason: answer,
-            whyReasonTamil: answer,
-            groundingScore: 0.85,
-            ruleId: 'RULE-REGIONAL-01',
-            citedProvenance: 'TNAU Agricultural Advisory Record 2025',
+            whyReason: noDataText,
+            whyReasonTamil: noDataText,
+            groundingScore: 0.0,
+            ruleId: 'RULE-NO-DATA',
+            citedProvenance: 'Regional Agricultural Extension Database',
             language: isTamil ? 'ta' : 'en',
             isGrounded: false,
             evidenceSources: const [],
             clarificationQuestions: const [],
             timestamp: DateTime.now(),
             status: ResponseStatus.noData,
-            districtName: 'Unspecified',
-            blockName: 'Unspecified',
-            cropName: 'Unspecified',
-            growthStage: 'Unspecified',
-            season: 'Unspecified',
+            districtName: district,
+            blockName: block,
+            cropName: 'General',
+            growthStage: 'N/A',
+            season: 'N/A',
             averageDataAgeDays: 180,
           );
         }
@@ -181,8 +151,8 @@ class ApiRagRepository implements RagRepository {
                 title: src['title'] as String? ?? 'Agricultural Research Document',
                 publicationDate: '2025-06-15',
                 retrievedDate: '2026-09-08',
-                region: 'Tamil Nadu Delta',
-                cropApplicability: 'Paddy / Rice',
+                region: district,
+                cropApplicability: 'General Crop',
                 authorOrInstitute: 'TNAU / ICAR Research Station',
                 documentType: src['source_type'] as String? ?? 'Research Bulletin',
                 excerpt: src['snippet'] as String? ?? 'Official extension bulletin excerpt.',
@@ -212,19 +182,19 @@ class ApiRagRepository implements RagRepository {
           whyReason: reasoning,
           whyReasonTamil: reasoning,
           groundingScore: 0.95,
-          ruleId: 'RULE-RAILWAY-RAG-01',
-          citedProvenance: 'Railway Vector Corpus & TNAU Extension Bulletins',
+          ruleId: 'RULE-RAG-RETRIEVAL-01',
+          citedProvenance: 'Regional Vector Corpus & TNAU Extension Bulletins',
           language: isTamil ? 'ta' : 'en',
           isGrounded: true,
           evidenceSources: evidenceSources,
           clarificationQuestions: const [],
           timestamp: DateTime.now(),
           status: ResponseStatus.grounded,
-          districtName: 'Thanjavur',
-          blockName: 'Budalur',
-          cropName: 'Paddy / Rice',
-          growthStage: 'Tillering',
-          season: 'Kuruvai',
+          districtName: district,
+          blockName: block,
+          cropName: 'General',
+          growthStage: 'Active Season',
+          season: 'Current',
           averageDataAgeDays: 14,
         );
       }

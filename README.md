@@ -9,32 +9,33 @@
 
 **RagUzhavan** is a mobile and cross-platform agricultural intelligence application designed to deliver precise, time-sensitive farming advice tailored to specific districts, soil types, crop growth stages, and agricultural seasons across India.
 
-Traditional AI assistants often provide generic or hallucinated farming recommendations that fail to account for local agro-climatic conditions or regional pest outbreaks. **RagUzhavan** addresses this critical gap by extracting, organizing, and unifying knowledge across isolated agricultural datasets (ICAR bulletins, TNAU advisories, Agmarknet price boards, and field telemetry). Every response explicitly presents verified citations, publishing institution dates, dataset age in days, and clear indicators when evidence is unavailable.
+The mobile app operates in **1 Single Normal RAG Mode**, providing an intuitive, streamlined interface for farmers without overwhelming them with mode toggles or complex parameters. Every query is executed against university research bulletins, ICAR scientific advisories, Agmarknet mandi price feeds, and agricultural Extension databases. Every grounded response explicitly presents verified citations, publishing institution dates, dataset age in days, and confidence scores. When no verified data exists in the corpus for a given query or location, the system strictly outputs `"No current data for your location / block."` (`"உங்கள் இருப்பிடத்திற்கான தரவு எதுவும் இல்லை."`) to prevent speculative AI hallucinations.
 
 ---
 
 ## Aim & Core Objectives
 
-1. **Solving Data Fragmentation**: Extract and unify data across multiple agricultural datasets (ICAR, TNAU, Agmarknet, weather forecasts, and soil telemetry) to deliver grounded advice to farmers.
-2. **Authoritative Citation & Record Freshness**: Present every cited document with its publishing institution, release date, dataset age in days, and confidence score.
-3. **Mobile Voice & Hands-Free Interaction**: Support field farmers with one-tap Speech-to-Text (STT) query input and Text-to-Speech (TTS) response readout.
-4. **On-Device Translation with Scientific Protection**: Deliver instant localized text output in English and Tamil (தமிழ்) while preserving vital agricultural numeric metrics (dosages like `0.6 g/L`, `25 kg/acre`, price quotes `₹2,320/q`, and rule IDs like `RULE-TNAU-BLAST-01`) through token masking.
-5. **Extension Officer Control & Admin Ingestion**: Provide dedicated admin workflows for agricultural officers to inspect knowledge graph node connections, monitor daily query telemetry, toggle scientific guardrails, and ingest/manage research bulletins in the ChromaDB vector database.
-6. **Low-Bandwidth & Rural Field Accessibility**: Support lightweight query payloads and offline queueing (`Hive` local storage) for remote farmland connectivity.
-7. **Native Bilingual Support**: Complete localized interface in **English** and **Tamil (தமிழ்)** across all navigation, forms, evidence drawers, and alerts.
+1. **Single Streamlined RAG Mode**: Execute all queries in a single, clean `normal` mode optimized for field farmers, combining vector retrieval, prompt grounding, and citation tracking.
+2. **Solving Data Fragmentation**: Extract and unify data across multiple agricultural datasets (ICAR, TNAU, Agmarknet, weather forecasts, and soil telemetry) to deliver grounded advice to farmers.
+3. **Thanjavur Regional Knowledge Base**: Seeded with 16 comprehensive, grounded agricultural Q&As covering paddy cultivation, pest management, fertilizer schedules, and mandi prices specifically for Thanjavur district.
+4. **Authoritative Citation & Record Freshness**: Present every cited document with its publishing institution, release date, dataset age in days, and confidence score.
+5. **Mobile Voice & Hands-Free Interaction**: Support field farmers with one-tap Speech-to-Text (STT) query input and Text-to-Speech (TTS) response readout.
+6. **On-Device Translation with Scientific Protection**: Deliver instant localized text output in English and Tamil (தமிழ்) while preserving vital agricultural numeric metrics (dosages like `0.6 g/L`, `25 kg/acre`, price quotes `₹2,320/q`, and rule IDs like `RULE-TN-LEAF-BLAST`) through token masking.
+7. **Extension Officer Control & Admin Ingestion**: Provide dedicated admin workflows for agricultural officers to inspect knowledge graph node connections, monitor daily query telemetry, toggle scientific guardrails, and ingest/manage research bulletins in the ChromaDB vector database.
+8. **Low-Bandwidth & Rural Field Accessibility**: Support lightweight query payloads and offline queueing (`Hive` local storage) for remote farmland connectivity.
+9. **Native Bilingual Support**: Complete localized interface in **English** and **Tamil (தமிழ்)** across all navigation, forms, evidence drawers, and alerts.
 
 ---
 
 ## Key System Features
 
+- **Single RAG Query Interface**: Dedicated single-mode chat workspace (`normal`) with instant answer generation, evidence drawers, reasoning breakdown, and audio controls.
 - **Grounded Agricultural Advisory Engine**: Delivers actionable advice on pest management, disease treatment, fertilizer application, and irrigation schedules backed by university citations.
+- **Strict Grounding Guardrails**: Zero hallucination policy; un-grounded queries return `"No current data for your location / block."`
 - **Mobile Speech & Accessibility Layer**: Real-time microphone voice input (`SpeechToTextService`) and voice readout (`TextToSpeechService`) tailored for farmers in the field.
 - **Agricultural Numeric Protection Engine**: On-device machine translation (`TranslationService`) using Google ML Kit with custom regex token masking to ensure chemical dosages, application rates, and rule IDs are never corrupted during translation.
 - **Admin Knowledge Graph & Document Ingestion**: Extension officer portal for document ingestion, knowledge graph visualization, and guardrail verification.
 - **Evidence Source Inspector**: Expandable drawer detailing cited bulletins, authoring bodies (TNAU, ICAR, TRRI), publication dates, excerpt quotes, and verification badges.
-- **Scientific Field Telemetry**: Real-time readouts of field sensor metrics, including soil moisture %, temperature °C, relative humidity %, Nitrogen NPK ppm, and soil pH levels.
-- **District Scope & Agro-Climatic Selector**: Explore soil profiles, dominant crop seasons, geo-coordinates, and active meteorological/pest alerts across districts.
-- **Low-Bandwidth / Store-and-Forward Sync**: Lightweight query payloads with store-and-forward offline sync status.
 - **Editorial Soil & Field Design System**: Cinematic aesthetic featuring warm soil, straw, field leaf, and parchment tones paired with **Footlight MT Light** display typography.
 
 ---

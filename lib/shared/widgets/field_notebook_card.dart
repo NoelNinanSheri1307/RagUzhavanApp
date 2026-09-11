@@ -28,81 +28,92 @@ class FieldNotebookCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget? headerWidget;
     if (title != null || tagText != null) {
-      final List<Widget> rowChildren = [];
-      if (tagText != null) {
-        rowChildren.add(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
-            decoration: BoxDecoration(
-              color: (tagColor ?? AppColors.straw).withValues(alpha: 0.15),
-              border: Border.all(color: (tagColor ?? AppColors.straw), width: 1.0),
-            ),
-            child: Text(
-              tagText!.toUpperCase(),
-              style: TextStyle(
-                fontSize: 10.0,
-                fontWeight: FontWeight.w700,
-                color: tagColor ?? AppColors.straw,
-                letterSpacing: 0.8,
-              ),
-            ),
+      final List<Widget> columnChildren = [];
+
+      if (tagText != null || trailing != null) {
+        columnChildren.add(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (tagText != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                  decoration: BoxDecoration(
+                    color: (tagColor ?? AppColors.straw).withValues(alpha: 0.15),
+                    border: Border.all(color: (tagColor ?? AppColors.straw), width: 1.0),
+                  ),
+                  child: Text(
+                    tagText!.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10.0,
+                      fontWeight: FontWeight.w700,
+                      color: tagColor ?? AppColors.straw,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                )
+              else
+                const SizedBox.shrink(),
+              if (trailing != null)
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: trailing!,
+                  ),
+                ),
+            ],
           ),
         );
-        rowChildren.add(const SizedBox(width: 10));
+        if (title != null || subtitle != null) {
+          columnChildren.add(const SizedBox(height: 6));
+        }
       }
 
       if (title != null) {
-        rowChildren.add(
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title!,
-                  style: const TextStyle(
-                    fontFamily: AppTheme.fontFootlight,
-                    fontSize: 16.0,
-                    color: AppColors.foreground,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: const TextStyle(
-                      fontSize: 11.0,
-                      color: AppColors.foregroundMuted,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
+        columnChildren.add(
+          Text(
+            title!,
+            style: const TextStyle(
+              fontFamily: AppTheme.fontFootlight,
+              fontSize: 15.5,
+              color: AppColors.foreground,
+              height: 1.2,
             ),
+            maxLines: 2,
+            softWrap: true,
           ),
         );
       }
 
-      if (trailing != null) {
-        rowChildren.add(const SizedBox(width: 8));
-        rowChildren.add(
-          Flexible(
-            fit: FlexFit.loose,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: trailing!,
+      if (subtitle != null) {
+        if (title != null) columnChildren.add(const SizedBox(height: 2));
+        columnChildren.add(
+          Text(
+            subtitle!,
+            style: const TextStyle(
+              fontSize: 11.0,
+              color: AppColors.foregroundMuted,
+              height: 1.2,
             ),
+            maxLines: 2,
+            softWrap: true,
           ),
         );
       }
 
       headerWidget = Container(
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+        width: double.infinity,
         decoration: const BoxDecoration(
           color: AppColors.surfaceElevated,
           border: Border(bottom: BorderSide(color: AppColors.border, width: 1.0)),
         ),
-        child: Row(children: rowChildren),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: columnChildren,
+        ),
       );
     }
 

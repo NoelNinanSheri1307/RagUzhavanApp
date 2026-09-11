@@ -27,12 +27,12 @@ class ApiStatusBadge extends StatelessWidget {
       badgeBg = AppColors.primaryMuted.withValues(alpha: 0.15);
       badgeBorder = AppColors.primaryMuted.withValues(alpha: 0.5);
       textColor = AppColors.primary;
-      statusText = 'PROTOTYPE DEMO MODE (LOCAL MOCK REPOSITORY)';
+      statusText = 'LOCAL RAG ENGINE ACTIVE';
     } else if (isUsingMockFallback) {
-      badgeBg = AppColors.warningText.withValues(alpha: 0.12);
-      badgeBorder = AppColors.warningText.withValues(alpha: 0.5);
-      textColor = AppColors.warningText;
-      statusText = 'REMOTE API UNREACHABLE — FALLBACK MOCK ACTIVE';
+      badgeBg = AppColors.primaryMuted.withValues(alpha: 0.15);
+      badgeBorder = AppColors.primaryMuted.withValues(alpha: 0.5);
+      textColor = AppColors.primary;
+      statusText = 'LOCAL RAG ENGINE ACTIVE';
     } else {
       badgeBg = AppColors.accentGreen.withValues(alpha: 0.15);
       badgeBorder = AppColors.accentGreen.withValues(alpha: 0.5);

@@ -92,8 +92,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return Scaffold(
       appBar: EditorialHeader(
-        title: 'ADMIN KNOWLEDGE BASE CONTROL',
-        subtitle: 'Railway RAG Retrieval System Settings & Ingested Document Management',
+        title: 'Admin Overview',
+        subtitle: 'System status, document verification, and safety controls',
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.error, size: 20),
@@ -126,21 +126,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 _buildAdminMetricCard(
                                   title: 'INGESTED SOURCES',
                                   value: '${_sources.length}',
-                                  subtext: 'Chroma Vector Documents',
+                                  subtext: 'Verified Documents',
                                   color: AppColors.straw,
                                 ),
                                 const SizedBox(height: 10),
                                 _buildAdminMetricCard(
                                   title: 'RETRIEVAL GUARDRAILS',
                                   value: _guardrailsEnabled ? 'ACTIVE' : 'DISABLED',
-                                  subtext: 'Strict agricultural filtering',
+                                  subtext: 'Active Safety Filter',
                                   color: _guardrailsEnabled ? AppColors.field : AppColors.warning,
                                 ),
                                 const SizedBox(height: 10),
                                 _buildAdminMetricCard(
-                                  title: 'VECTOR PIPELINE',
+                                  title: 'SYSTEM STATUS',
                                   value: 'ONLINE',
-                                  subtext: 'Railway Backend Live',
+                                  subtext: 'Active & Operational',
                                   color: AppColors.leaf,
                                 ),
                               ],
@@ -152,7 +152,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 child: _buildAdminMetricCard(
                                   title: 'INGESTED SOURCES',
                                   value: '${_sources.length}',
-                                  subtext: 'Chroma Vector Documents',
+                                  subtext: 'Verified Documents',
                                   color: AppColors.straw,
                                 ),
                               ),
@@ -161,16 +161,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 child: _buildAdminMetricCard(
                                   title: 'RETRIEVAL GUARDRAILS',
                                   value: _guardrailsEnabled ? 'ACTIVE' : 'DISABLED',
-                                  subtext: 'Strict agricultural filtering',
+                                  subtext: 'Active Safety Filter',
                                   color: _guardrailsEnabled ? AppColors.field : AppColors.warning,
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: _buildAdminMetricCard(
-                                  title: 'VECTOR PIPELINE',
+                                  title: 'SYSTEM STATUS',
                                   value: 'ONLINE',
-                                  subtext: 'Railway Backend Live',
+                                  subtext: 'Active & Operational',
                                   color: AppColors.leaf,
                                 ),
                               ),
@@ -180,11 +180,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // System Guardrails Toggle Card (PATCH /admin/settings)
+                      // System Guardrails Toggle Card
                       FieldNotebookCard(
-                        title: 'RAG GUARDRAILS & RETRIEVAL SETTINGS (PATCH /admin/settings)',
+                        title: 'Agricultural Safety Guardrails',
                         subtitle: 'Control evidence grounding enforcement for all user agricultural queries',
-                        tagText: 'SYSTEM POLICY',
+                        tagText: 'SAFETY',
                         tagColor: AppColors.straw,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -215,11 +215,44 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Ingested Sources Management (GET /sources)
+                      // Explanation of Evidence Guardrails
                       FieldNotebookCard(
-                        title: 'INGESTED KNOWLEDGE BASE SOURCES (GET /sources)',
+                        title: 'How Scientific Evidence Guardrails Work',
+                        subtitle: 'Understanding safety grounding and RAG engine performance',
+                        tagText: 'GUARDRAILS INFO',
+                        tagColor: AppColors.leaf,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              '1. Strictly Grounded Responses',
+                              style: TextStyle(fontSize: 13.0, fontWeight: FontWeight.bold, color: AppColors.paper),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'All AI answers generated for farmers are verified against published agricultural bulletins (TNAU, ICAR, IMD Agromet) to eliminate unverified advice or hallucinations.',
+                              style: TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted, height: 1.35),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              '2. Does this affect RAG Engine performance?',
+                              style: TextStyle(fontSize: 13.0, fontWeight: FontWeight.bold, color: AppColors.paper),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'No. The underlying Chroma vector retrieval engine and AI model run at full speed. Guardrails act as a real-time safety verification layer, ensuring only factual evidence reaches the farmer.',
+                              style: TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted, height: 1.35),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Ingested Sources Management
+                      FieldNotebookCard(
+                        title: 'Agriculture Knowledge Bulletins',
                         subtitle: 'Document corpus used for retrieval grounding in RAG queries',
-                        tagText: 'CHROMA DB SOURCES',
+                        tagText: 'BULLETINS',
                         tagColor: AppColors.leaf,
                         trailing: ElevatedButton(
                           onPressed: () => context.go('/admin/farmers'),
@@ -279,9 +312,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
                       // Knowledge Graph Link
                       FieldNotebookCard(
-                        title: 'VISUAL KNOWLEDGE GRAPH (GET /sources/graph)',
+                        title: 'Agricultural Knowledge Map',
                         subtitle: 'Interactive node graph connecting agricultural sources, topics, and crop categories',
-                        tagText: 'GRAPH VISUALIZER',
+                        tagText: 'KNOWLEDGE MAP',
                         tagColor: AppColors.field,
                         trailing: ElevatedButton(
                           onPressed: () => context.go('/graph'),
@@ -296,9 +329,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
                       // Admin Active RAG Chat Sessions Card
                       FieldNotebookCard(
-                        title: 'ACTIVE RAG CHAT SESSIONS & CONVERSATIONS',
+                        title: 'Farmer Enquiries & Chat History',
                         subtitle: 'Inspect past multi-turn RAG queries, evidence citations, and user sessions',
-                        tagText: 'RAG CHAT LOGS',
+                        tagText: 'HISTORY',
                         tagColor: AppColors.straw,
                         child: _adminSessions.isEmpty
                             ? const Padding(

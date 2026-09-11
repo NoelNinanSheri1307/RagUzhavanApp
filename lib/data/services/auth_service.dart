@@ -106,4 +106,30 @@ class AuthService extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void updateFarmerDetails({
+    required String name,
+    required String phone,
+    required String district,
+    required List<String> crops,
+  }) {
+    if (_currentFarmer != null) {
+      _currentFarmer = Farmer(
+        id: _currentFarmer!.id,
+        name: name,
+        phone: phone,
+        district: district,
+        block: _currentFarmer!.block,
+        state: _currentFarmer!.state,
+        preferredLanguage: _currentFarmer!.preferredLanguage,
+        crops: crops,
+        landSizeAcres: _currentFarmer!.landSizeAcres,
+        agroZone: _currentFarmer!.agroZone,
+        season: _currentFarmer!.season,
+        accountStatus: _currentFarmer!.accountStatus,
+        lastActivity: DateTime.now(),
+      );
+      notifyListeners();
+    }
+  }
 }

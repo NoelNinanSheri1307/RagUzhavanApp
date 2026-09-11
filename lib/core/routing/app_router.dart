@@ -35,6 +35,13 @@ class AppRouter {
           return null;
         }
 
+        // Protected Admin / Graph routes
+        if (loc == '/graph') {
+          if (!isLoggedIn) return '/login';
+          if (!isAdmin) return '/farmer';
+          return null;
+        }
+
         // Protected Admin routes
         if (loc.startsWith('/admin')) {
           if (!isLoggedIn || !isAdmin) {

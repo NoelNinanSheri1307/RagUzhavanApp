@@ -209,7 +209,7 @@ class _KnowledgeGraphScreenState extends State<KnowledgeGraphScreen> {
                 else ...[
                   // Visual Graph Network Representation Card
                   Container(
-                    height: 280,
+                    height: 320,
                     width: double.infinity,
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
@@ -218,11 +218,18 @@ class _KnowledgeGraphScreenState extends State<KnowledgeGraphScreen> {
                     ),
                     child: Stack(
                       children: [
+                        // Network Connector Lines Painter
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: GraphConnectorPainter(nodeCount: filteredNodes.length),
+                          ),
+                        ),
+
                         // Central Hub Indicator
                         Align(
                           alignment: Alignment.center,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: AppColors.surfaceHighlight,
                               border: Border.all(color: AppColors.straw, width: 1.5),
@@ -230,13 +237,13 @@ class _KnowledgeGraphScreenState extends State<KnowledgeGraphScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: const [
-                                Icon(Icons.grain, color: AppColors.straw, size: 24),
-                                SizedBox(height: 4),
+                                Icon(Icons.grain, color: AppColors.straw, size: 20),
+                                SizedBox(height: 2),
                                 Text(
                                   'RagUzhavan RAG Hub',
                                   style: TextStyle(
                                     fontFamily: AppTheme.fontFootlight,
-                                    fontSize: 13.0,
+                                    fontSize: 12.0,
                                     color: AppColors.straw,
                                   ),
                                 ),
@@ -244,29 +251,59 @@ class _KnowledgeGraphScreenState extends State<KnowledgeGraphScreen> {
                             ),
                           ),
                         ),
-                        // Force-directed Node Chips
+
+                        // Non-Overlapping Radial Graph Node Chips
                         ...List.generate(filteredNodes.length, (index) {
                           final node = filteredNodes[index];
                           final isSelected = _selectedNode?.id == node.id;
                           final count = filteredNodes.length;
-                          final double angle = (2 * math.pi * index / count) - (math.pi / 2);
-                          final double radiusX = count <= 3 ? 0.70 : 0.82;
-                          final double radiusY = count <= 3 ? 0.65 : 0.75;
-                          final double alignX = radiusX * math.cos(angle);
-                          final double alignY = radiusY * math.sin(angle);
+
+                          double alignX = 0.0;
+                          double alignY = 0.0;
+
+                          if (count == 1) {
+                            alignX = 0.0;
+                            alignY = -0.80;
+                          } else if (count == 2) {
+                            alignX = index == 0 ? -0.75 : 0.75;
+                            alignY = 0.0;
+                          } else if (count == 3) {
+                            if (index == 0) {
+                              alignX = 0.0;
+                              alignY = -0.82;
+                            } else if (index == 1) {
+                              alignX = -0.75;
+                              alignY = 0.78;
+                            } else {
+                              alignX = 0.75;
+                              alignY = 0.78;
+                            }
+                          } else {
+                            final double angle = (2 * math.pi * index / count) - (math.pi / 2);
+                            alignX = 0.82 * math.cos(angle);
+                            alignY = 0.78 * math.sin(angle);
+                          }
 
                           return Align(
                             alignment: Alignment(alignX, alignY),
                             child: InkWell(
                               onTap: () => setState(() => _selectedNode = node),
                               child: Container(
+                                constraints: const BoxConstraints(maxWidth: 160),
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                                 decoration: BoxDecoration(
                                   color: isSelected ? AppColors.field : AppColors.surface,
                                   border: Border.all(
-                                    color: isSelected ? AppColors.leaf : AppColors.straw.withValues(alpha: 0.6),
+                                    color: isSelected ? AppColors.leaf : AppColors.straw.withValues(alpha: 0.8),
                                     width: isSelected ? 1.5 : 1.0,
                                   ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -442,5 +479,62 @@ class _KnowledgeGraphScreenState extends State<KnowledgeGraphScreen> {
         icon = Icons.article_outlined;
     }
     return Icon(icon, color: AppColors.straw, size: 16);
+  }
+}
+
+class GraphConnectorPainter extends CustomPainter {
+  final int nodeCount;
+
+  GraphConnectorPainter({required this.nodeCount});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (nodeCount == 0) return;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final paint = Paint()
+      ..color = AppColors.straw.withValues(alpha: 0.35)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+
+    for (int i = 0; i < nodeCount; i++) {
+      double alignX = 0.0;
+      double alignY = 0.0;
+
+      if (nodeCount == 1) {
+        alignX = 0.0;
+        alignY = -0.80;
+      } else if (nodeCount == 2) {
+        alignX = i == 0 ? -0.75 : 0.75;
+        alignY = 0.0;
+      } else if (nodeCount == 3) {
+        if (i == 0) {
+          alignX = 0.0;
+          alignY = -0.82;
+        } else if (i == 1) {
+          alignX = -0.75;
+          alignY = 0.78;
+        } else {
+          alignX = 0.75;
+          alignY = 0.78;
+        }
+      } else {
+        final double angle = (2 * math.pi * i / nodeCount) - (math.pi / 2);
+        alignX = 0.82 * math.cos(angle);
+        alignY = 0.78 * math.sin(angle);
+      }
+
+      final nodePos = Offset(
+        center.dx + (alignX * size.width / 2),
+        center.dy + (alignY * size.height / 2),
+      );
+
+      canvas.drawLine(center, nodePos, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant GraphConnectorPainter oldDelegate) {
+    return oldDelegate.nodeCount != nodeCount;
   }
 }

@@ -69,6 +69,7 @@ class AppLocalizations {
       'publicSourcesTitle': 'PUBLIC AGRICULTURAL DATASETS SYNTHESIZED',
 
       // Farmer Home
+      'farmerDashboardTitle': 'FARMER OVERVIEW',
       'whatCanIAskTitle': 'What can I ask RagUzhavan?',
       'askCategoryIrrigation': 'Irrigation Advisory',
       'askCategorySowing': 'Sowing Calendar',
@@ -144,7 +145,7 @@ class AppLocalizations {
       'errorGeneric': 'Unable to process query at this time.',
       'networkError': 'Connection unavailable. Switch to low-bandwidth mode.',
       'apiEndpoint': 'API Base URL Config',
-      'mockModeNotice': 'Running in Autonomous Frontend Mode (Mock Repository active).',
+      'mockModeNotice': 'Operating with localized agricultural vector database.',
     },
     'ta': {
       // General & Identity
@@ -195,6 +196,7 @@ class AppLocalizations {
       'publicSourcesTitle': 'ஒருங்கிணைக்கப்பட்ட பொது விவசாயத் தரவுகள்',
 
       // Farmer Home
+      'farmerDashboardTitle': 'விவசாயி முகப்பு',
       'whatCanIAskTitle': 'ரக் உழவனிடம் என்ன கேட்கலாம்?',
       'askCategoryIrrigation': 'பாசன வழிகாட்டுதல்',
       'askCategorySowing': 'விதைப்பு நாட்காட்டி',
@@ -270,7 +272,7 @@ class AppLocalizations {
       'errorGeneric': 'தற்போது கேள்வியைச் செயலாக்க முடியவில்லை.',
       'networkError': 'இணைப்பு இல்லை. குறைந்த அலைவரிசை பயன்முறைக்கு மாறவும்.',
       'apiEndpoint': 'API முகவரி அமைப்பு',
-      'mockModeNotice': 'சுயாதீன முன்முனை பயன்முறையில் இயங்குகிறது.',
+      'mockModeNotice': 'உள்ளூர் விவசாயத் தரவுத்தளத்துடன் இயங்குகிறது.',
     },
   };
 

@@ -45,14 +45,15 @@ class EditorialNavBar extends StatelessWidget {
               path: '/farmer/ask',
               isSelected: currentPath == '/farmer/ask',
             ),
-            _buildNavItem(
-              context: context,
-              icon: Icons.hub_outlined,
-              activeIcon: Icons.hub,
-              label: 'Knowledge Map',
-              path: '/graph',
-              isSelected: currentPath == '/graph',
-            ),
+            if (authService.isAdmin)
+              _buildNavItem(
+                context: context,
+                icon: Icons.hub_outlined,
+                activeIcon: Icons.hub,
+                label: 'Knowledge Map',
+                path: '/graph',
+                isSelected: currentPath == '/graph',
+              ),
             if (authService.isAdmin)
               _buildNavItem(
                 context: context,

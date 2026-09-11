@@ -6,6 +6,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../data/services/auth_service.dart';
 import '../../shared/widgets/editorial_header.dart';
 import '../../shared/widgets/field_notebook_card.dart';
+import '../../shared/widgets/soil_texture_painter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -82,192 +83,194 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         },
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-                Center(
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          height: 56,
-                          width: 56,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.grass, color: AppColors.straw, size: 48),
+      body: SoilTextureBackground(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 10),
+                  Center(
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            height: 56,
+                            width: 56,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.grass, color: AppColors.straw, size: 48),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'RagUzhavan',
-                        style: TextStyle(
-                          fontFamily: 'FootlightMTLight',
-                          fontSize: 26.0,
-                          color: AppColors.foreground,
+                        const SizedBox(height: 8),
+                        const Text(
+                          'RagUzhavan',
+                          style: TextStyle(
+                            fontFamily: 'FootlightMTLight',
+                            fontSize: 26.0,
+                            color: AppColors.foreground,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Region-Aware Agricultural Intelligence System',
-                        style: TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Region-Aware Agricultural Intelligence System',
+                          style: TextStyle(fontSize: 11.5, color: AppColors.foregroundMuted),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                FieldNotebookCard(
-                  title: 'PORTAL AUTHENTICATION (POST /token)',
-                  subtitle: 'Sign in to access your agricultural RAG sessions and advisory',
-                  tagText: 'OAUTH2 AUTH',
-                  tagColor: AppColors.straw,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'ACCESS ROLE',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.foregroundSubtle,
-                          letterSpacing: 0.8,
+                  const SizedBox(height: 20),
+                  FieldNotebookCard(
+                    title: 'Sign In',
+                    subtitle: 'Sign in to ask questions and view crop advisories',
+                    tagText: 'ACCOUNT ACCESS',
+                    tagColor: AppColors.straw,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'ACCESS ROLE',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.foregroundSubtle,
+                            letterSpacing: 0.8,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => setState(() => _selectedRole = UserRole.farmer),
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: _selectedRole == UserRole.farmer
-                                    ? AppColors.surfaceHighlight
-                                    : AppColors.surface,
-                                side: BorderSide(
-                                  color: _selectedRole == UserRole.farmer
-                                      ? AppColors.straw
-                                      : AppColors.border,
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => setState(() => _selectedRole = UserRole.farmer),
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: _selectedRole == UserRole.farmer
+                                      ? AppColors.surfaceHighlight
+                                      : AppColors.surface,
+                                  side: BorderSide(
+                                    color: _selectedRole == UserRole.farmer
+                                        ? AppColors.straw
+                                        : AppColors.border,
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                l10n.text('roleFarmer'),
-                                style: TextStyle(
-                                  color: _selectedRole == UserRole.farmer
-                                      ? AppColors.straw
-                                      : AppColors.foregroundMuted,
+                                child: Text(
+                                  l10n.text('roleFarmer'),
+                                  style: TextStyle(
+                                    color: _selectedRole == UserRole.farmer
+                                        ? AppColors.straw
+                                        : AppColors.foregroundMuted,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => setState(() => _selectedRole = UserRole.admin),
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: _selectedRole == UserRole.admin
-                                    ? AppColors.surfaceHighlight
-                                    : AppColors.surface,
-                                side: BorderSide(
-                                  color: _selectedRole == UserRole.admin
-                                      ? AppColors.straw
-                                      : AppColors.border,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => setState(() => _selectedRole = UserRole.admin),
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: _selectedRole == UserRole.admin
+                                      ? AppColors.surfaceHighlight
+                                      : AppColors.surface,
+                                  side: BorderSide(
+                                    color: _selectedRole == UserRole.admin
+                                        ? AppColors.straw
+                                        : AppColors.border,
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                l10n.text('roleAdmin'),
-                                style: TextStyle(
-                                  color: _selectedRole == UserRole.admin
-                                      ? AppColors.straw
-                                      : AppColors.foregroundMuted,
+                                child: Text(
+                                  l10n.text('roleAdmin'),
+                                  style: TextStyle(
+                                    color: _selectedRole == UserRole.admin
+                                        ? AppColors.straw
+                                        : AppColors.foregroundMuted,
+                                  ),
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        const Text(
+                          'USERNAME OR PHONE',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.foregroundSubtle,
+                            letterSpacing: 0.8,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      const Text(
-                        'USERNAME OR PHONE',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.foregroundSubtle,
-                          letterSpacing: 0.8,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _usernameController,
-                        style: const TextStyle(color: AppColors.foreground),
-                        decoration: const InputDecoration(
-                          hintText: 'Enter username or phone',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      const Text(
-                        'PASSWORD',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.foregroundSubtle,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        style: const TextStyle(color: AppColors.foreground),
-                        decoration: const InputDecoration(
-                          hintText: 'Enter password',
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      if (_errorMessage != null) ...[
-                        Text(
-                          _errorMessage!,
-                          style: const TextStyle(fontSize: 12.0, color: AppColors.error, fontWeight: FontWeight.w600),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _usernameController,
+                          style: const TextStyle(color: AppColors.foreground),
+                          decoration: const InputDecoration(
+                            hintText: 'Enter username or phone',
+                          ),
                         ),
                         const SizedBox(height: 16),
-                      ],
 
-                      SizedBox(
-                        width: double.infinity,
-                        height: 46,
-                        child: ElevatedButton(
-                          onPressed: _isSubmitting ? null : _handleLogin,
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background),
-                                )
-                              : Text(l10n.text('login')),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Center(
-                        child: TextButton(
-                          onPressed: () => context.go('/register'),
-                          child: Text(
-                            l10n.text('register'),
-                            style: const TextStyle(color: AppColors.leaf, fontSize: 12.5),
+                        const Text(
+                          'PASSWORD',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.foregroundSubtle,
+                            letterSpacing: 0.8,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          style: const TextStyle(color: AppColors.foreground),
+                          decoration: const InputDecoration(
+                            hintText: 'Enter password',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        if (_errorMessage != null) ...[
+                          Text(
+                            _errorMessage!,
+                            style: const TextStyle(fontSize: 12.0, color: AppColors.error, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 46,
+                          child: ElevatedButton(
+                            onPressed: _isSubmitting ? null : _handleLogin,
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background),
+                                  )
+                                : Text(l10n.text('login')),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Center(
+                          child: TextButton(
+                            onPressed: () => context.go('/register'),
+                            child: Text(
+                              l10n.text('register'),
+                              style: const TextStyle(color: AppColors.leaf, fontSize: 12.5),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -275,3 +278,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

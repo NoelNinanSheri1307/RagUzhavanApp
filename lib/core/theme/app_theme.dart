@@ -13,7 +13,7 @@ abstract class AppTheme {
         surface: AppColors.surface,
         primary: AppColors.straw,
         secondary: AppColors.leaf,
-        tertiary: AppColors.field,
+        tertiary: AppColors.accentOrange,
         error: AppColors.error,
         onSurface: AppColors.foreground,
         onPrimary: AppColors.background,
@@ -132,40 +132,40 @@ abstract class AppTheme {
           color: AppColors.foreground,
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: const CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero, // Editorial crisp ruled borders
-          side: const BorderSide(color: AppColors.border, width: 1.0),
+          side: BorderSide(color: AppColors.border, width: 1.0),
         ),
         margin: EdgeInsets.zero,
       ),
-      inputDecorationTheme: InputDecorationTheme(
+      inputDecorationTheme: const InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: const BorderSide(color: AppColors.straw, width: 1.5),
+          borderSide: BorderSide(color: AppColors.straw, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: const BorderSide(color: AppColors.error),
+          borderSide: BorderSide(color: AppColors.error),
         ),
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           fontSize: 13.5,
           color: AppColors.foregroundSubtle,
         ),
-        labelStyle: const TextStyle(
+        labelStyle: TextStyle(
           fontSize: 13.0,
           color: AppColors.foregroundMuted,
         ),
@@ -179,7 +179,7 @@ abstract class AppTheme {
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           textStyle: const TextStyle(
             fontSize: 13.5,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
           ),
         ),
@@ -205,3 +205,4 @@ abstract class AppTheme {
     );
   }
 }
+

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RagUzhavan (ரக் உழவன்) — Agricultural Intelligence System</title>
+  <meta name="description" content="Agricultural decision-support system solving data fragmentation for Indian farmers. Multi-source RAG pipeline, voice STT, TTS, Tamil translation, and Admin knowledge graph.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            soil: {
+              50: '#FDFBF7',
+              100: '#F4EFE6',
+              200: '#E7DDD0',
+              300: '#D5C4B0',
+              800: '#3B2A20',
+              900: '#231812',
+            },
+            leaf: {
+              50: '#F0F9F1',
+              100: '#DCF0DD',
+              600: '#2E7D32',
+              700: '#1B4D2E',
+              800: '#143B22',
+            },
+            straw: {
+              400: '#F59E0B',
+              500: '#D97706',
+              600: '#B45309',
+            },
+            parchment: '#FAF6EE',
+            borderEarth: '#E2D7C7',
+          },
+          fontFamily: {
+            serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      background-color: #FAF6EE;
+      color: #231812;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+    }
+    
+    .font-serif-title {
+      font-family: 'Instrument Serif', Georgia, serif;
+      letter-spacing: -0.02em;
+    }
+
+    .bg-soil-grid {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(59, 42, 32, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(59, 42, 32, 0.04) 1px, transparent 1px);
+    }
+
+    .badge-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Modern iPhone Device Frame */
+    .iphone-frame {
+      position: relative;
+      border-radius: 46px;
+      padding: 10px;
+      background: #1C1917;
+      box-shadow: 
+        0 0 0 2px #44403C,
+        0 25px 50px -12px rgba(35, 24, 18, 0.35),
+        0 10px 20px -5px rgba(0, 0, 0, 0.2);
+    }
+    .iphone-screen {
+      position: relative;
+      border-radius: 36px;
+      overflow: hidden;
+      background: #231812;
+      aspect-ratio: 9 / 19.5;
+      width: 100%;
+    }
+    .iphone-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+    .iphone-island {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 22px;
+      background: #000;
+      border-radius: 12px;
+      z-index: 30;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #F4EFE6;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #D5C4B0;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-parchment text-soil-900 selection:bg-leaf-100 selection:text-leaf-800">
+
+  <!-- ==================== HEADER / NAVIGATION ==================== -->
+  <header class="sticky top-0 z-50 bg-parchment/95 backdrop-blur-md border-b border-borderEarth">
+    <div class="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3">
+        <div>
+          <span class="font-serif text-3xl font-normal leading-none tracking-tight block text-soil-900">RagUzhavan <span class="text-leaf-700 font-sans text-xl font-normal">(ரக் உழவன்)</span></span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-soil-800">
+        <a href="#overview" class="hover:text-leaf-700 transition-colors">Overview</a>
+        <a href="#features" class="hover:text-leaf-700 transition-colors">Core Capabilities</a>
+        <a href="#admin" class="hover:text-leaf-700 transition-colors">Admin & Ingestion</a>
+        <a href="#screens" class="hover:text-leaf-700 transition-colors">App Screens</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="./raguzhavan.apk" download="RagUzhavan.apk" class="inline-flex items-center gap-2.5 px-5 py-3 bg-leaf-700 hover:bg-leaf-800 text-parchment text-xs font-mono font-semibold uppercase tracking-wider rounded-sm transition-all shadow-sm hover:shadow">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Download APK (139 MB)</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== HERO SECTION ==================== -->
+  <section id="overview" class="relative pt-16 pb-24 md:pt-24 md:pb-32 bg-soil-grid overflow-hidden border-b border-borderEarth">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <!-- Left Hero Narrative -->
+        <div class="lg:col-span-7 space-y-8">
+          <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-soil-100 border border-borderEarth rounded-sm">
+            <span class="w-2 h-2 rounded-full bg-leaf-600 animate-pulse"></span>
+            <span class="badge-pill text-soil-800">Multi-Source Agricultural Decision System</span>
+          </div>
+
+          <h1 class="font-serif-title text-4xl sm:text-5xl lg:text-6xl text-soil-900 leading-[1.08] font-normal">
+            Deterministic Advisory for Farmers.<br>
+            <span class="text-leaf-700 italic">Zero Speculative Hallucination.</span>
+          </h1>
+
+          <p class="text-base sm:text-lg text-soil-800 leading-relaxed font-normal max-w-2xl">
+            RagUzhavan solves the critical problem of agricultural data fragmentation across India. By extracting, organizing, and unifying knowledge across ICAR research, TNAU extension bulletins, Agmarknet mandi prices, and soil telemetry datasets, RagUzhavan delivers precise, verifiable guidance directly to farmers.
+          </p>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap items-center gap-4 pt-4">
+            <a href="./raguzhavan.apk" download="RagUzhavan.apk" class="inline-flex items-center gap-3 px-7 py-4 bg-leaf-700 hover:bg-leaf-800 text-parchment text-xs font-mono font-bold uppercase tracking-wider rounded-sm transition-all shadow-md">
+              <i data-lucide="smartphone" class="w-4 h-4"></i>
+              <span>Install RagUzhavan App</span>
+            </a>
+            <a href="#features" class="inline-flex items-center gap-2 px-6 py-4 bg-soil-100 hover:bg-soil-200 border border-borderEarth text-soil-900 text-xs font-mono font-semibold uppercase tracking-wider rounded-sm transition-colors">
+              <span>Explore Features</span>
+              <i data-lucide="arrow-down" class="w-4 h-4 text-soil-800"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Right iPhone Screen Mockup -->
+        <div class="lg:col-span-5 flex justify-center">
+          <div class="w-full max-w-[300px]">
+            <div class="iphone-frame">
+              <div class="iphone-island"></div>
+              <div class="iphone-screen">
+                <img src="assets/FrontPage.jpeg" alt="RagUzhavan App Front Page" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CORE ARCHITECTURE & FRAGMENTATION ==================== -->
+  <section class="py-20 bg-soil-100/50 border-b border-borderEarth">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="max-w-3xl mb-12 space-y-3">
+        <span class="badge-pill text-leaf-700">Problem & Solution</span>
+        <h2 class="font-serif-title text-3xl sm:text-4xl text-soil-900">
+          Unifying Fragmented Agricultural Intelligence Across India
+        </h2>
+        <p class="text-sm text-soil-800 leading-relaxed">
+          Agricultural data in India is dispersed across university research papers, government advisories, regional mandi price boards, and field telemetry. RagUzhavan consolidates these isolated silos into one unified grounded intelligence network.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Source 1 -->
+        <div class="bg-parchment p-8 border border-borderEarth rounded-sm space-y-4">
+          <div class="w-10 h-10 bg-leaf-50 border border-leaf-600/30 flex items-center justify-center text-leaf-700">
+            <i data-lucide="book-open" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-2xl text-soil-900">ICAR & University Bulletins</h3>
+          <p class="text-sm text-soil-800 leading-relaxed font-normal">
+            Directly ingests verified research documents from the Indian Council of Agricultural Research (ICAR) and TNAU to provide research-grade pest and crop advisories.
+          </p>
+        </div>
+
+        <!-- Source 2 -->
+        <div class="bg-parchment p-8 border border-borderEarth rounded-sm space-y-4">
+          <div class="w-10 h-10 bg-leaf-50 border border-leaf-600/30 flex items-center justify-center text-leaf-700">
+            <i data-lucide="trending-up" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-2xl text-soil-900">Agmarknet Mandi Rates</h3>
+          <p class="text-sm text-soil-800 leading-relaxed font-normal">
+            Synthesizes daily market procurement feeds to ensure farmers receive accurate trading prices across Grade A and common crop varieties.
+          </p>
+        </div>
+
+        <!-- Source 3 -->
+        <div class="bg-parchment p-8 border border-borderEarth rounded-sm space-y-4">
+          <div class="w-10 h-10 bg-leaf-50 border border-leaf-600/30 flex items-center justify-center text-leaf-700">
+            <i data-lucide="activity" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-2xl text-soil-900">Soil & Weather Telemetry</h3>
+          <p class="text-sm text-soil-800 leading-relaxed font-normal">
+            Evaluates humidity, water level, and temperature metrics to trigger proactive irrigation and fungicide spraying warnings.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CORE APP CAPABILITIES ==================== -->
+  <section id="features" class="py-24 bg-parchment border-b border-borderEarth">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <div class="max-w-3xl mb-16 space-y-3">
+        <span class="badge-pill text-straw-600">Complete Feature Architecture</span>
+        <h2 class="font-serif-title text-4xl sm:text-5xl text-soil-900">
+          Built for Real-World Field Operations
+        </h2>
+        <p class="text-sm text-soil-800">
+          Every tool in RagUzhavan is designed for practical field utility — from speech input in noisy fields to numeric dosage protection.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        
+        <!-- Feature 1 -->
+        <div class="p-7 bg-soil-100/50 border border-borderEarth rounded-sm space-y-4">
+          <div class="w-10 h-10 bg-straw-500/10 border border-straw-500/30 flex items-center justify-center text-straw-600">
+            <i data-lucide="mic" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-2xl text-soil-900">Voice Speech-to-Text (STT)</h3>
+          <p class="text-sm text-soil-800 leading-relaxed">
+            One-tap microphone recording allows farmers to speak questions naturally in Tamil or English without needing complex typing.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="p-7 bg-soil-100/50 border border-borderEarth rounded-sm space-y-4">
+          <div class="w-10 h-10 bg-leaf-50 border border-leaf-600/30 flex items-center justify-center text-leaf-700">
+            <i data-lucide="volume-2" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-2xl text-soil-900">Text-to-Speech (TTS) Playback</h3>
+          <p class="text-sm text-soil-800 leading-relaxed">
+            Instant voice reading of generated advisories ensures accessibility for all farmers directly in their native language.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="p-7 bg-soil-100/50 border border-borderEarth rounded-sm space-y-4">
+          <div class="w-10 h-10 bg-leaf-50 border border-leaf-600/30 flex items-center justify-center text-leaf-700">
+            <i data-lucide="languages" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-2xl text-soil-900">Numeric Protection Model</h3>
+          <p class="text-sm text-soil-800 leading-relaxed">
+            On-device translation locks chemical dosages (<code class="font-mono text-xs bg-parchment px-1 text-soil-900">0.6 g/L</code>) and prices (<code class="font-mono text-xs bg-parchment px-1 text-soil-900">₹2,320/q</code>) so numbers are never altered during translation.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="p-7 bg-soil-100/50 border border-borderEarth rounded-sm space-y-4">
+          <div class="w-10 h-10 bg-leaf-50 border border-leaf-600/30 flex items-center justify-center text-leaf-700">
+            <i data-lucide="network" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-2xl text-soil-900">Admin Knowledge Graph</h3>
+          <p class="text-sm text-soil-800 leading-relaxed">
+            Agricultural officers can visualize source document nodes, examine entity connections, and audit query grounding metrics.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="p-7 bg-soil-100/50 border border-borderEarth rounded-sm space-y-4">
+          <div class="w-10 h-10 bg-leaf-50 border border-leaf-600/30 flex items-center justify-center text-leaf-700">
+            <i data-lucide="file-plus" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-2xl text-soil-900">Document Ingestion Pipeline</h3>
+          <p class="text-sm text-soil-800 leading-relaxed">
+            Admins can upload, index, or remove research PDF/bulletin sources directly into the vector database to update extension recommendations.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="p-7 bg-soil-100/50 border border-borderEarth rounded-sm space-y-4">
+          <div class="w-10 h-10 bg-straw-500/10 border border-straw-500/30 flex items-center justify-center text-straw-600">
+            <i data-lucide="wifi-off" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-serif text-2xl text-soil-900">Store & Forward Queue</h3>
+          <p class="text-sm text-soil-800 leading-relaxed">
+            Queries submitted without network connectivity are stored in local Hive storage and automatically synced when cell service resumes.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== ADMIN KNOWLEDGE GRAPH & INGESTION ==================== -->
+  <section id="admin" class="py-24 bg-soil-900 text-parchment border-b border-soil-800">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <div class="lg:col-span-6 space-y-6">
+          <span class="badge-pill text-straw-400">Extension Officer Control Panel</span>
+          <h2 class="font-serif-title text-4xl sm:text-5xl text-parchment leading-tight">
+            Knowledge Graph Visualization & Document Ingestion
+          </h2>
+          <p class="text-base text-soil-300 leading-relaxed font-sans font-light">
+            RagUzhavan includes a dedicated portal for agricultural officers and system admins. Manage document verification, inspect vector graph linkages, toggle scientific guardrails, and track registered farmer activity.
+          </p>
+
+          <div class="space-y-4 pt-2">
+            <div class="flex items-start gap-4 p-4 bg-soil-800/80 border border-soil-700 rounded-sm">
+              <i data-lucide="shield-check" class="w-5 h-5 text-leaf-400 shrink-0 mt-1"></i>
+              <div>
+                <h4 class="font-serif text-xl text-parchment">Scientific Evidence Guardrails</h4>
+                <p class="text-xs text-soil-300 mt-1">Toggle deterministic rule checks and verify confidence scores before recommendations are published to farmers.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4 p-4 bg-soil-800/80 border border-soil-700 rounded-sm">
+              <i data-lucide="upload-cloud" class="w-5 h-5 text-straw-400 shrink-0 mt-1"></i>
+              <div>
+                <h4 class="font-serif text-xl text-parchment">Dynamic Research Ingestion</h4>
+                <p class="text-xs text-soil-300 mt-1">Upload new university extension bulletins or seasonal pest advisories directly to the ChromaDB vector database.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-6 flex justify-center gap-6">
+          <div class="w-full max-w-[260px]">
+            <div class="iphone-frame">
+              <div class="iphone-island"></div>
+              <div class="iphone-screen">
+                <img src="assets/KnowledgeGraphOfIngestedDocx_forAdmin.jpeg" alt="Knowledge Graph for Admin" class="w-full h-full object-cover">
+              </div>
+            </div>
+            <span class="block text-center text-xs font-mono text-straw-400 mt-3">Knowledge Graph View</span>
+          </div>
+
+          <div class="w-full max-w-[260px] hidden sm:block">
+            <div class="iphone-frame">
+              <div class="iphone-island"></div>
+              <div class="iphone-screen">
+                <img src="assets/IngestedDocxwithinRAG_forAdmin.jpeg" alt="Ingested Documents for Admin" class="w-full h-full object-cover">
+              </div>
+            </div>
+            <span class="block text-center text-xs font-mono text-straw-400 mt-3">Document Ingestion View</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== MOBILE APP SCREENSHOTS GALLERY ==================== -->
+  <section id="screens" class="py-24 bg-soil-100/60 border-b border-borderEarth">
+    <div class="max-w-7xl mx-auto px-6">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+        <span class="badge-pill text-leaf-700">Mobile Interface Gallery</span>
+        <h2 class="font-serif-title text-4xl sm:text-5xl text-soil-900">
+          Explored Across the RagUzhavan Mobile App
+        </h2>
+        <p class="text-sm text-soil-800">
+          Clean high-contrast typography, large touch targets, soil-textured canvas, and intuitive mobile screens.
+        </p>
+      </div>
+
+      <!-- Screenshot Grid in iPhones -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        
+        <!-- Screen 1 -->
+        <div class="space-y-4 group flex flex-col items-center">
+          <div class="w-full max-w-[270px]">
+            <div class="iphone-frame transition-transform duration-300 group-hover:-translate-y-2">
+              <div class="iphone-island"></div>
+              <div class="iphone-screen">
+                <img src="assets/FrontPage.jpeg" alt="Farmer Front Page Screen" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
+          <div class="text-center">
+            <h4 class="font-serif text-xl text-soil-900">Farmer Overview</h4>
+            <p class="text-xs font-mono text-soil-800 uppercase mt-0.5">Quick Advisory & Dashboard</p>
+          </div>
+        </div>
+
+        <!-- Screen 2 -->
+        <div class="space-y-4 group flex flex-col items-center">
+          <div class="w-full max-w-[270px]">
+            <div class="iphone-frame transition-transform duration-300 group-hover:-translate-y-2">
+              <div class="iphone-island"></div>
+              <div class="iphone-screen">
+                <img src="assets/SignInPage.jpeg" alt="Sign In Screen" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
+          <div class="text-center">
+            <h4 class="font-serif text-xl text-soil-900">Sign In & Access</h4>
+            <p class="text-xs font-mono text-soil-800 uppercase mt-0.5">Phone & Extension Access</p>
+          </div>
+        </div>
+
+        <!-- Screen 3 -->
+        <div class="space-y-4 group flex flex-col items-center">
+          <div class="w-full max-w-[270px]">
+            <div class="iphone-frame transition-transform duration-300 group-hover:-translate-y-2">
+              <div class="iphone-island"></div>
+              <div class="iphone-screen">
+                <img src="assets/TamilTranslation.jpeg" alt="Tamil Advisory & Translation Screen" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
+          <div class="text-center">
+            <h4 class="font-serif text-xl text-soil-900">Tamil Translation & TTS</h4>
+            <p class="text-xs font-mono text-soil-800 uppercase mt-0.5">Numeric Dosage Safeguard</p>
+          </div>
+        </div>
+
+        <!-- Screen 4 -->
+        <div class="space-y-4 group flex flex-col items-center">
+          <div class="w-full max-w-[270px]">
+            <div class="iphone-frame transition-transform duration-300 group-hover:-translate-y-2">
+              <div class="iphone-island"></div>
+              <div class="iphone-screen">
+                <img src="assets/FarmerSettings.jpeg" alt="Farmer Settings Screen" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
+          <div class="text-center">
+            <h4 class="font-serif text-xl text-soil-900">Settings & Preferences</h4>
+            <p class="text-xs font-mono text-soil-800 uppercase mt-0.5">District & Crop Config</p>
+          </div>
+        </div>
+
+        <!-- Screen 5 -->
+        <div class="space-y-4 group flex flex-col items-center">
+          <div class="w-full max-w-[270px]">
+            <div class="iphone-frame transition-transform duration-300 group-hover:-translate-y-2">
+              <div class="iphone-island"></div>
+              <div class="iphone-screen">
+                <img src="assets/IngestedDocxwithinRAG_forAdmin.jpeg" alt="Admin Document Ingestion Screen" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
+          <div class="text-center">
+            <h4 class="font-serif text-xl text-soil-900">Document Ingestion</h4>
+            <p class="text-xs font-mono text-soil-800 uppercase mt-0.5">Admin Research Corpus Management</p>
+          </div>
+        </div>
+
+        <!-- Screen 6 -->
+        <div class="space-y-4 group flex flex-col items-center">
+          <div class="w-full max-w-[270px]">
+            <div class="iphone-frame transition-transform duration-300 group-hover:-translate-y-2">
+              <div class="iphone-island"></div>
+              <div class="iphone-screen">
+                <img src="assets/KnowledgeGraphOfIngestedDocx_forAdmin.jpeg" alt="Knowledge Graph Screen" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
+          <div class="text-center">
+            <h4 class="font-serif text-xl text-soil-900">Knowledge Graph Nodes</h4>
+            <p class="text-xs font-mono text-soil-800 uppercase mt-0.5">Admin Entity Connections</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== DOWNLOAD & APK SECTION ==================== -->
+  <section class="py-24 bg-soil-900 text-parchment relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 text-center space-y-8 relative z-10">
+      
+      <h2 class="font-serif-title text-4xl sm:text-6xl max-w-3xl mx-auto leading-tight">
+        Empower Farmers with Grounded Intelligence.
+      </h2>
+
+      <p class="text-base text-soil-300 max-w-xl mx-auto font-sans leading-relaxed">
+        Download the standalone RagUzhavan Android APK (139 MB) directly to test local query vector search, voice STT, TTS audio, and low-bandwidth telemetry sync.
+      </p>
+
+      <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="./raguzhavan.apk" download="RagUzhavan.apk" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-straw-500 hover:bg-straw-600 text-soil-900 text-sm font-mono font-bold uppercase tracking-wider rounded-sm transition-all shadow-xl">
+          <i data-lucide="download" class="w-5 h-5"></i>
+          <span>Download RagUzhavan.apk (139 MB)</span>
+        </a>
+      </div>
+
+      <div class="pt-8 border-t border-soil-800 flex flex-wrap items-center justify-center gap-8 text-xs font-mono text-soil-300">
+        <span>Target OS: Android 8.0+</span>
+        <span>Flutter Framework: 3.x</span>
+        <span>Backend: Railway FastAPI Vector Engine</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="py-8 bg-soil-950 text-soil-300 border-t border-soil-900 text-xs font-mono">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <span>© 2026 RagUzhavan (ரக் உழவன்) — Agricultural Intelligence System</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <span>Multi-Source Vector RAG</span>
+        <span>Field-Ready Android App</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>

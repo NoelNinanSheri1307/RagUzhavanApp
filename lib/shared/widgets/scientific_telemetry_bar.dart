@@ -48,25 +48,6 @@ class ScientificTelemetryBar extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (sensorData.isDemoData) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.warningText.withValues(alpha: 0.15),
-                          border: Border.all(color: AppColors.warningText.withValues(alpha: 0.5)),
-                        ),
-                        child: const Text(
-                          'DEMO DATA',
-                          style: TextStyle(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.warningText,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),

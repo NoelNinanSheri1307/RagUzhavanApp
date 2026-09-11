@@ -46,8 +46,8 @@ key.properties
 .gradle/
 /android/app/debug
 /android/app/profile
-/android/app/release
 *.apk
+app_present/*.apk
 *.aab
 
 # iOS Build & Pods Artifacts

@@ -127,7 +127,7 @@ class MockRagRepository implements RagRepository {
         whyReasonTamil: 'மாவட்ட அல்லது பயிர் விவரம் தேவை.',
         groundingScore: 0.80,
         ruleId: 'RULE-SLOT-CLARIFICATION',
-        citedProvenance: 'Metrics Slot Clarification Engine',
+        citedProvenance: 'TNAU Regional Extension Advisory 2025',
         language: isTamil ? 'ta' : 'en',
         isGrounded: false,
         evidenceSources: const [],
@@ -202,7 +202,7 @@ class MockRagRepository implements RagRepository {
           whyReasonTamil: 'சென்சார் அளவீடுகள் தேவை.',
           groundingScore: 0.80,
           ruleId: 'RULE-SENSOR-CLARIFICATION',
-          citedProvenance: 'Sensor Telemetry Clarification Engine',
+          citedProvenance: 'TNAU Agro-Meteorological Advisory Bulletin 2025',
           language: isTamil ? 'ta' : 'en',
           isGrounded: false,
           evidenceSources: const [],
@@ -236,10 +236,97 @@ class MockRagRepository implements RagRepository {
       }
     }
 
-    final reasoningText = 'Retrieved 4 vector passages from TNAU extension bulletins. Applied region filter for Thanjavur district.';
-    final answerText = isTamil
-        ? 'ட்ரைசைக்ளசோல் 75% WP @ 0.6 கிராம்/லிட்டர் தெளிக்கவும். தஞ்சாவூர் காவிரி டெல்டா களிமண் நிலங்களில் 92.4% திறன் கொண்டது.'
-        : 'Apply Tricyclazole 75% WP @ 0.6 g/L. Efficacy is 92.4% against Leaf Blast in Delta clay soils under high humidity (>85%).';
+    final qLower = question.toLowerCase();
+    String answerText = '';
+    String whatToDoText = '';
+    String whatToDoTamilText = '';
+    String whenText = '';
+    String whenTamilText = '';
+    String dosageText = '';
+    String dosageTamilText = '';
+    String reasoningText = '';
+    String ruleId = 'RULE-TNAU-GENERAL-01';
+    String provenance = 'TNAU District Extension Advisory 2025';
+
+    if (qLower.contains('water') || qLower.contains('irrigat') || qLower.contains('flood') || qLower.contains('drain') || qLower.contains('நீ')) {
+      answerText = isTamil
+          ? 'தூர்கட்டும் பருவத்தில் வயலில் 2.5 முதல் 5.0 செ.மீ நீர் தேக்கி வைக்கவும். சீரான அறுவடைக்கு 10 நாட்களுக்கு முன் நீரை வடிக்கவும்.'
+          : 'Maintain 2.5 cm to 5.0 cm standing water level during active tillering phase. Drain field water 10 days prior to harvest for uniform crop maturity.';
+      whatToDoText = 'Regulate field drainage gates to maintain shallow standing water.';
+      whatToDoTamilText = 'மட்டமான நீர் தேங்க வடிகால் மதகுகளை ஒழுங்குபடுத்தவும்.';
+      whenText = 'Active tillering to panicle initiation stage.';
+      whenTamilText = 'தூர்கட்டும் பருவம் முதல் கதிர் உருவாகும் நிலை வரை.';
+      dosageText = '2.5 cm - 5.0 cm standing water.';
+      dosageTamilText = '2.5 செ.மீ - 5.0 செ.மீ நீர் மட்டம்.';
+      reasoningText = 'Evaluated field water saturation telemetry. TNAU Irrigation Bulletin recommends intermittent wetting and drying for Cauvery Delta clay soils.';
+      ruleId = 'RULE-TNAU-IRRIGATION-02';
+      provenance = 'TNAU Water Management & Irrigation Bulletin 2025';
+    } else if (qLower.contains('sow') || qLower.contains('seed') || qLower.contains('variety') || qLower.contains('season') || qLower.contains('month') || qLower.contains('விதை')) {
+      answerText = isTamil
+          ? 'தஞ்சாவூர் மாவட்ட குறுவை பருவத்திற்கு ஜூன் 15 முதல் ஜூன் 30 வரை விதைப்பு உகந்தது. ADT-37, ADT-43 அல்லது TPS-5 ரகங்கள் ஏக்கருக்கு 25 கிலோ விதை தேவை.'
+          : 'Optimal Kuruvai sowing window in Thanjavur district is June 15 to June 30. Recommended short duration paddy varieties: ADT-37, ADT-43, or TPS-5 with 25 kg/acre seed rate.';
+      whatToDoText = 'Treat seeds with Pseudomonas fluorescens @ 10g/kg before sowing.';
+      whatToDoTamilText = 'விதைப்பதற்கு முன் 10 கிராம்/கிலோ சூடோமோனாஸ் கலந்து விதை நேர்த்தி செய்யவும்.';
+      whenText = 'June 15 - June 30 (Kuruvai Season).';
+      whenTamilText = 'ஜூன் 15 - ஜூன் 30 (குறுவை பருவம்).';
+      dosageText = '25 kg seeds / acre.';
+      dosageTamilText = 'ஏக்கருக்கு 25 கிலோ விதைகள்.';
+      reasoningText = 'Analyzed meteorological sowing window and monsoon onset data for Thanjavur Budalur block.';
+      ruleId = 'RULE-TNAU-SOWING-01';
+      provenance = 'TNAU Sowing Calendar & Seed Advisory Bulletin 2025';
+    } else if (qLower.contains('mandi') || qLower.contains('price') || qLower.contains('rate') || qLower.contains('market') || qLower.contains('sell') || qLower.contains('விலை')) {
+      answerText = isTamil
+          ? 'இன்றைய தஞ்சாவூர் சந்தை நெல் விலை: கிரேடு A நெல் ₹2,320 / குவிண்டால். சாதாரண ரக நெல் ₹2,280 / குவிண்டால்.'
+          : 'Current Thanjavur Mandi price for Grade A Paddy is ₹2,320 / quintal. Common variety paddy is trading at ₹2,280 / quintal with steady regional market demand.';
+      whatToDoText = 'Sell harvested paddy at nearby Regulated Market Committee (RMC) procurement centers.';
+      whatToDoTamilText = 'அறுவடை செய்த நெல்லை அருகிலுள்ள ஒழுங்குமுறை விற்பனைக்கூடங்களில் விற்கவும்.';
+      whenText = 'Current market trading hours (09:00 AM - 05:00 PM).';
+      whenTamilText = 'தற்போதைய சந்தை நேரங்கள் (காலை 09:00 - மாலை 05:00).';
+      dosageText = '₹2,320 / quintal (Grade A Paddy).';
+      dosageTamilText = '₹2,320 / குவிண்டால் (கிரேடு A நெல்).';
+      reasoningText = 'Synthesized real-time Agmarknet mandi price feeds for Thanjavur district agricultural markets.';
+      ruleId = 'RULE-AGMARKNET-MANDI-04';
+      provenance = 'Agmarknet Mandi Price Feed & Tamil Nadu Agricultural Marketing Board';
+    } else if (qLower.contains('fertiliz') || qLower.contains('npk') || qLower.contains('urea') || qLower.contains('nitrogen') || qLower.contains('nutrient') || qLower.contains('உரம்')) {
+      answerText = isTamil
+          ? 'நெற்பயிருக்கு NPK 120:50:50 கிலோ/ஹெக்டேர் இடவும். நைட்ரஜனை வேப்பங்குழை மூடப்பட்ட யூரியாவாக 4 தவணைகளாகப் பிரித்து இடவும்.'
+          : 'Apply NPK 120:50:50 kg/ha for Paddy. Split Nitrogen into 4 equal doses (Basal, Active Tillering, Panicle Initiation, Flowering) using Neem-coated Urea to minimize leaching loss.';
+      whatToDoText = 'Broadband split application of Neem-coated Urea with Zinc Sulphate.';
+      whatToDoTamilText = 'ஜிங்க் சல்பேட் மற்றும் வேப்பங்குழை யூரியாவை தவணைகளாக இடவும்.';
+      whenText = 'Basal, 21 DAT, 42 DAT, and flowering stages.';
+      whenTamilText = 'அடி உரம், 21வது நாள், 42வது நாள் மற்றும் பூக்கும் பருவம்.';
+      dosageText = '120 kg N, 50 kg P2O5, 50 kg K2O / hectare.';
+      dosageTamilText = 'ஹெக்டேருக்கு 120 கி N, 50 கி P2O5, 50 கி K2O.';
+      reasoningText = 'Retrieved soil fertility recommendations for Cauvery Delta clay soils from TNAU Agronomy Bulletin.';
+      ruleId = 'RULE-TNAU-FERTILIZER-03';
+      provenance = 'TNAU Soil Fertility & Fertilizer Recommendation Chart 2025';
+    } else if (qLower.contains('blast') || qLower.contains('disease') || qLower.contains('fungicid') || qLower.contains('pest') || qLower.contains('insect') || qLower.contains('spray') || qLower.contains('leaf') || qLower.contains('நோய்')) {
+      answerText = isTamil
+          ? 'குலை நோய் தாக்குதலுக்கு 0.6 கிராம்/லிட்டர் ட்ரைசைக்ளசோல் 75% WP அல்லது 1.0 மி.லி/லிட்டர் அஸோக்ஸிஸ்ட்ரோபின் தெளிக்கவும்.'
+          : 'For Leaf Blast control under high humidity (>85%), spray Tricyclazole 75% WP @ 0.6 g/L (120 g/acre) or Azoxystrobin 25% SC @ 1.0 mL/L during early disease onset.';
+      whatToDoText = 'Foliar spray during cool morning or evening hours.';
+      whatToDoTamilText = 'காலை அல்லது மாலை வேளையில் இலை தெளிப்பு செய்யவும்.';
+      whenText = 'Immediate spray upon noticing initial spindle-shaped leaf blast spots.';
+      whenTamilText = 'நோய் அறிகுறி தென்பட்டவுடன் தெளிக்கவும்.';
+      dosageText = '0.6 g/L (Tricyclazole 75% WP) in 200 L water / acre.';
+      dosageTamilText = '0.6 கிராம்/லிட்டர் (200 லிட்டர் தண்ணீர்/ஏக்கர்).';
+      reasoningText = 'Evaluated high night humidity telemetry (>85%) and temperature records against TNAU Paddy Disease Protocols.';
+      ruleId = 'RULE-TNAU-BLAST-01';
+      provenance = 'TNAU Crop Protection Guide & ICAR Disease Management Bulletin 2025';
+    } else {
+      answerText = isTamil
+          ? '"$question" பற்றிய பரிந்துரை: தஞ்சாவூர் மாவட்ட வேளாண் பல்கலைக்கழக வழிகாட்டலின்படி முறையான பராமரிப்பு மற்றும் வடிகால் வசதியை மேற்கொள்ளவும்.'
+          : 'For "$question": Follow recommended TNAU extension protocols for Thanjavur district. Ensure balanced soil nutrition, timely weed management, and regular field scouting.';
+      whatToDoText = 'Follow TNAU regional crop management package of practices.';
+      whatToDoTamilText = 'வேளாண் பல்கலைக்கழக பயிர் மேலாண்மை நடைமுறைகளைப் பின்பற்றவும்.';
+      whenText = 'Active cropping season.';
+      whenTamilText = 'பயிர் காலம் முழுவதும்.';
+      dosageText = 'As per TNAU recommended package of practices.';
+      dosageTamilText = 'வேளாண் வழிகாட்டுதலின்படி.';
+      reasoningText = 'Retrieved general regional crop management guidance for selected district and block.';
+      ruleId = 'RULE-TNAU-GENERAL-01';
+      provenance = 'TNAU District Extension Advisory & Agricultural Record 2025';
+    }
 
     messages.add(ChatMessageModel(
       id: msgId,
@@ -256,8 +343,8 @@ class MockRagRepository implements RagRepository {
       sources: [
         {
           'id': 'doc-1',
-          'title': 'TNAU Crop Production Guide 2025.pdf',
-          'snippet': 'Tricyclazole 75 WP @ 0.6g/l shows 92.4% efficacy in Delta clay soils.',
+          'title': provenance,
+          'snippet': answerText,
           'kind': 'doc',
         },
       ],
@@ -271,31 +358,31 @@ class MockRagRepository implements RagRepository {
       responseTextTamil: answerText,
       recommendationSummary: answerText,
       recommendationSummaryTamil: answerText,
-      whatToDo: 'Apply Tricyclazole 75% WP @ 0.6 g/L during cool morning hours.',
-      whatToDoTamil: 'காலை வேளையில் 0.6 கிராம்/லிட்டர் தெளிக்கவும்.',
-      whenToApply: 'Apply during early disease onset.',
-      whenToApplyTamil: 'நோய் அறிகுறி தென்பட்டவுடன் தெளிக்கவும்.',
-      howMuchAmount: '0.6 g/L',
-      howMuchAmountTamil: '0.6 கிராம்/லிட்டர்',
+      whatToDo: whatToDoText,
+      whatToDoTamil: whatToDoTamilText,
+      whenToApply: whenText,
+      whenToApplyTamil: whenTamilText,
+      howMuchAmount: dosageText,
+      howMuchAmountTamil: dosageTamilText,
       whyReason: reasoningText,
       whyReasonTamil: reasoningText,
       groundingScore: 0.95,
-      ruleId: 'RULE-TNAU-BLAST-01',
-      citedProvenance: 'TNAU Crop Production Guide 2025',
+      ruleId: ruleId,
+      citedProvenance: provenance,
       language: isTamil ? 'ta' : 'en',
       isGrounded: true,
-      evidenceSources: const [
+      evidenceSources: [
         EvidenceSource(
           id: 'SRC-01',
-          title: 'TNAU Crop Production Guide: Paddy Disease Protocols 2025',
+          title: provenance,
           publicationDate: '2025-05-10',
           authorOrInstitute: 'Tamil Nadu Agricultural University (TNAU)',
           documentType: 'Research Bulletin',
-          excerpt: 'Tricyclazole 75 WP @ 0.6g/l shows 92.4% efficacy against Leaf Blast in Delta clay soils.',
-          excerptTamil: 'ட்ரைசைக்ளசோல் 75 WP @ 0.6g/l தெளிப்பது 92.4% பலன் அளிக்கும்.',
+          excerpt: answerText,
+          excerptTamil: answerText,
           confidenceScore: 0.95,
           datasetAgeDays: 14,
-          urlOrRef: 'TNAU_Paddy_2025.pdf',
+          urlOrRef: 'TNAU_Agricultural_Advisory_2025.pdf',
           isVerified: true,
         ),
       ],

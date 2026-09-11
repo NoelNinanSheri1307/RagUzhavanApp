@@ -93,8 +93,8 @@ class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: EditorialHeader(
-        title: 'KNOWLEDGE BASE SOURCES',
-        subtitle: 'Ingested Document Corpus & Chroma Vector Indexing Manager',
+        title: 'Knowledge Bulletins',
+        subtitle: 'Verified agricultural bulletins & research documents',
         showBackButton: true,
         onBack: () => context.go('/admin'),
       ),
@@ -113,7 +113,7 @@ class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'VECTOR STORE DOCUMENT CORPUS',
+                            'VERIFIED AGRICULTURE BULLETINS',
                             style: TextStyle(
                               fontFamily: 'monospace',
                               fontSize: 11.0,
@@ -144,9 +144,9 @@ class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
                       ],
 
                       FieldNotebookCard(
-                        title: 'INGESTED DOCUMENT CORPUS (${_sources.length})',
-                        subtitle: 'Chroma DB collection documents powering grounded RAG recommendations',
-                        tagText: 'GET /sources',
+                        title: 'Verified Document Corpus (${_sources.length})',
+                        subtitle: 'Official university bulletins powering grounded farming recommendations',
+                        tagText: 'BULLETINS',
                         tagColor: AppColors.straw,
                         child: _sources.isEmpty
                             ? const Padding(
@@ -210,7 +210,7 @@ class _AdminFarmersScreenState extends State<AdminFarmersScreen> {
                                       IconButton(
                                         icon: const Icon(Icons.delete_outline, color: AppColors.error),
                                         onPressed: () => _deleteSource(id, name),
-                                        tooltip: 'DELETE /sources/$id',
+                                        tooltip: 'Remove Document',
                                       ),
                                     ],
                                   );

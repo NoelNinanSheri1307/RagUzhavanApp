@@ -17,7 +17,7 @@ The mobile app operates in **1 Single Normal RAG Mode**, providing an intuitive,
 
 1. **Single Streamlined RAG Mode**: Execute all queries in a single, clean `normal` mode optimized for field farmers, combining vector retrieval, prompt grounding, and citation tracking.
 2. **Solving Data Fragmentation**: Extract and unify data across multiple agricultural datasets (ICAR, TNAU, Agmarknet, weather forecasts, and soil telemetry) to deliver grounded advice to farmers.
-3. **Thanjavur Regional Knowledge Base**: Seeded with 16 comprehensive, grounded agricultural Q&As covering paddy cultivation, pest management, fertilizer schedules, and mandi prices specifically for Thanjavur district.
+3. **District-Level Localized Intelligence**: Deliver grounded, district-specific agricultural advice tailored to the farmer's location, soil characteristics, crop growth stage, and regional pest advisories.
 4. **Authoritative Citation & Record Freshness**: Present every cited document with its publishing institution, release date, dataset age in days, and confidence score.
 5. **Mobile Voice & Hands-Free Interaction**: Support field farmers with one-tap Speech-to-Text (STT) query input and Text-to-Speech (TTS) response readout.
 6. **On-Device Translation with Scientific Protection**: Deliver instant localized text output in English and Tamil (தமிழ்) while preserving vital agricultural numeric metrics (dosages like `0.6 g/L`, `25 kg/acre`, price quotes `₹2,320/q`, and rule IDs like `RULE-TN-LEAF-BLAST`) through token masking.

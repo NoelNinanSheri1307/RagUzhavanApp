@@ -1,4 +1,4 @@
-# Miscellaneous
+# Miscellaneous & OS Files
 *.class
 *.log
 *.pyc
@@ -42,13 +42,13 @@ key.properties
 /build/
 /coverage/
 
-# Android Build & Gradle Artifacts
+# Android & iOS Binaries & Build Artifacts
 .gradle/
 /android/app/debug
 /android/app/profile
 *.apk
-app_present/*.apk
 *.aab
+app_present/*.apk
 
 # iOS Build & Pods Artifacts
 /ios/Pods/
@@ -61,5 +61,3 @@ app_present/*.apk
 # Symbolication & Obfuscation
 app.*.symbols
 app.*.map.json
-
-
